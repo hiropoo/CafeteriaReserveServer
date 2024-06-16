@@ -23,8 +23,8 @@ interface CommandExecutor {
 
 // ユーザーの登録処理
 class SignUpExecutor implements CommandExecutor {
-    private static final String COUNT_USER_QUERY = "SELECT * FROM users WHERE username = ?";
-    private static final String INSERT_USER_QUERY = "INSERT INTO users (user_id, username, password) VALUES (?, ?, ?)";
+    private static final String CHECK_USER_QUERY = "SELECT * FROM users WHERE username = ?";
+    private static final String INSERT_USER_QUERY = "INSERT INTO users (id, username, password) VALUES (?, ?, ?)";
 
     @Override
     public void execute(PrintWriter out, String args) {
@@ -45,7 +45,7 @@ class SignUpExecutor implements CommandExecutor {
         }
 
         Connection connection = null;
-        PreparedStatement countStatement = null;
+        PreparedStatement checkStatement = null;
         PreparedStatement insertStatement = null;
         ResultSet resultSet = null;
 
@@ -55,9 +55,9 @@ class SignUpExecutor implements CommandExecutor {
             System.out.println("Connected to DB.");
 
             // ユーザー名がすでに存在するかどうかを確認 (ユーザーネームにnameを使用しているユーザーの数をカウントするクエリ)
-            countStatement = connection.prepareStatement(COUNT_USER_QUERY);
-            countStatement.setString(1, name);
-            resultSet = countStatement.executeQuery();
+            checkStatement = connection.prepareStatement(CHECK_USER_QUERY);
+            checkStatement.setString(1, name);
+            resultSet = checkStatement.executeQuery();
 
             if (resultSet.next()) {
                 out.println("Failed: Username already exists.");
@@ -71,7 +71,6 @@ class SignUpExecutor implements CommandExecutor {
             insertStatement.setString(3, password);
             insertStatement.executeUpdate();
             out.println("User " + name + " registered successfully.");
-            System.out.println("User " + name + " registered successfully.");
 
         } catch (SQLException e) {
             out.println("Failed: Failed to register user " + name);
@@ -83,8 +82,8 @@ class SignUpExecutor implements CommandExecutor {
                 if (resultSet != null) {
                     resultSet.close();
                 }
-                if (countStatement != null) {
-                    countStatement.close();
+                if (checkStatement != null) {
+                    checkStatement.close();
                 }
                 if (insertStatement != null) {
                     insertStatement.close();
@@ -149,7 +148,7 @@ class LoginExecutor implements CommandExecutor {
 
         } catch (SQLException e) {
             out.println("Failed: Failed to login user " + name);
-            System.out.println("Failed to login user " + name);
+            System.out.println("Failed to login user. " + name);
             e.printStackTrace();
         } finally {
             try {
