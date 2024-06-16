@@ -6,7 +6,6 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,12 +23,8 @@ interface CommandExecutor {
 
 // ユーザーの登録処理
 class SignUpExecutor implements CommandExecutor {
-    String COUNT_USER_QUERY = "SELECT COUNT(*) FROM users WHERE username = ?";
-    String INSERT_USER_QUERY = "INSERT INTO users (username, password) VALUES (?, ?)";
-
-    Connection connection = null;
-    PreparedStatement statement = null;
-    ResultSet resultSet = null;
+    private static final String COUNT_USER_QUERY = "SELECT COUNT(*) FROM users WHERE username = ?";
+    private static final String INSERT_USER_QUERY = "INSERT INTO users (username, password) VALUES (?, ?)";
 
     @Override
     public void execute(PrintWriter out, String args) {
@@ -49,50 +44,48 @@ class SignUpExecutor implements CommandExecutor {
             return;
         }
 
-        // データベースに接続
+        Connection connection = null;
+        PreparedStatement countStatement = null;
+        PreparedStatement insertStatement = null;
+        ResultSet resultSet = null;
+
         try {
+            // データベースに接続
             connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
-            System.out.println("connected to SQL.");
-        } catch (SQLException e) {
-            out.println("Failed: Failed to connect to the database.");
-            System.out.println("Failed to connect to the database.");
-        } finally {
-            if (connection == null) {
-                return;
-            }
-        }
+            System.out.println("Connected to SQL.");
 
-        // ユーザーの登録処理
-        try {
             // ユーザー名がすでに存在するかどうかを確認 (ユーザーネームにnameを使用しているユーザーの数をカウントするクエリ)
-            statement = connection.prepareStatement(COUNT_USER_QUERY);
-            statement.setString(1, name);
+            countStatement = connection.prepareStatement(COUNT_USER_QUERY);
+            countStatement.setString(1, name);
+            resultSet = countStatement.executeQuery();
 
-            resultSet = statement.executeQuery();
-            resultSet.next();
-            if (resultSet.getInt(1) > 0) {
+            if (resultSet.next() && resultSet.getInt(1) > 0) {
                 out.println("Failed: Username already exists.");
                 return;
             }
 
             // ユーザーネームに重複がなければユーザーを登録
-            statement = connection.prepareStatement(INSERT_USER_QUERY);
-            statement.setString(1, name);
-            statement.setString(2, password);
-            statement.executeUpdate();
+            insertStatement = connection.prepareStatement(INSERT_USER_QUERY);
+            insertStatement.setString(1, name);
+            insertStatement.setString(2, password);
+            insertStatement.executeUpdate();
             out.println("User " + name + " registered successfully.");
 
         } catch (SQLException e) {
             out.println("Failed: Failed to register user " + name);
             System.out.println("Failed to register user. " + name);
+            e.printStackTrace();
 
         } finally {
             try {
                 if (resultSet != null) {
                     resultSet.close();
                 }
-                if (statement != null) {
-                    statement.close();
+                if (countStatement != null) {
+                    countStatement.close();
+                }
+                if (insertStatement != null) {
+                    insertStatement.close();
                 }
                 if (connection != null) {
                     connection.close();
@@ -103,7 +96,6 @@ class SignUpExecutor implements CommandExecutor {
                 e.printStackTrace();
             }
         }
-
     }
 }
 
