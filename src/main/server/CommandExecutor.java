@@ -24,7 +24,7 @@ interface CommandExecutor {
 // ユーザーの登録処理
 class SignUpExecutor implements CommandExecutor {
     private static final String COUNT_USER_QUERY = "SELECT * FROM users WHERE username = ?";
-    private static final String INSERT_USER_QUERY = "INSERT INTO users (username, password) VALUES (?, ?)";
+    private static final String INSERT_USER_QUERY = "INSERT INTO users (user_id, username, password) VALUES (?, ?, ?)";
 
     @Override
     public void execute(PrintWriter out, String args) {
@@ -66,10 +66,12 @@ class SignUpExecutor implements CommandExecutor {
 
             // ユーザーネームに重複がなければユーザーを登録
             insertStatement = connection.prepareStatement(INSERT_USER_QUERY);
-            insertStatement.setString(1, name);
-            insertStatement.setString(2, password);
+            insertStatement.setInt(1, 0);
+            insertStatement.setString(2, name);
+            insertStatement.setString(3, password);
             insertStatement.executeUpdate();
             out.println("User " + name + " registered successfully.");
+            System.out.println("User " + name + " registered successfully.");
 
         } catch (SQLException e) {
             out.println("Failed: Failed to register user " + name);
@@ -147,7 +149,7 @@ class LoginExecutor implements CommandExecutor {
 
         } catch (SQLException e) {
             out.println("Failed: Failed to login user " + name);
-            System.out.println("Failed to login user. " + name);
+            System.out.println("Failed to login user " + name);
             e.printStackTrace();
         } finally {
             try {
