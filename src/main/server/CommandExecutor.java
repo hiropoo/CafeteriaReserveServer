@@ -23,7 +23,7 @@ interface CommandExecutor {
 
 // ユーザーの登録処理
 class SignUpExecutor implements CommandExecutor {
-    private static final String COUNT_USER_QUERY = "SELECT COUNT(*) FROM users WHERE username = ?";
+    private static final String COUNT_USER_QUERY = "SELECT * FROM users WHERE username = ?";
     private static final String INSERT_USER_QUERY = "INSERT INTO users (username, password) VALUES (?, ?)";
 
     @Override
@@ -59,7 +59,7 @@ class SignUpExecutor implements CommandExecutor {
             countStatement.setString(1, name);
             resultSet = countStatement.executeQuery();
 
-            if (resultSet.next() && resultSet.getInt(1) > 0) {
+            if (resultSet.next()) {
                 out.println("Failed: Username already exists.");
                 return;
             }
