@@ -20,6 +20,7 @@ public class Server {
     // コマンドマップの初期化
     static {
         commandExecutors.put("signUp", new SignUpExecutor());
+        commandExecutors.put("login", new LoginExecutor());
     }
 
     public static void main(String[] args) throws IOException {
