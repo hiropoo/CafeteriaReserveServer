@@ -1,4 +1,4 @@
-package test;
+package test.client;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -6,13 +6,13 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 import main.util.PropertyUtil;
-import main.util.User;
+import test.util.User;
 
 /*
  * テスト用のサーバーハンドラ
  * クライアントがサーバにリクエストを送信したり、サーバからのレスポンスを受け取るためのハンドラ
  */
-public class TestServerHandler {
+public class ServerHandler {
     static final String SERVER_IP = PropertyUtil.getProperty("ip"); // サーバーのIPアドレス
     static final int PORT = Integer.parseInt(PropertyUtil.getProperty("port")); // サーバーのポート番号
 
@@ -23,7 +23,7 @@ public class TestServerHandler {
     private User user; // Userインスタンス
 
     // コンストラクタでサーバに接続
-    public TestServerHandler(User user) {
+    public ServerHandler(User user) {
         System.out.println("Connecting to the server...");
         try {
             clientSocket = new Socket(SERVER_IP, PORT);
@@ -57,7 +57,8 @@ public class TestServerHandler {
                 System.out.println("Registration success");
                 isRegisterSuccess = true;
             } else {
-                System.out.println("Registration failed." + response);
+                System.out.println("Registration failed.");
+                System.out.println("Response: " + response);
             }
         } catch (Exception e) {
             System.out.println("Error occurred while registering.");
@@ -91,6 +92,7 @@ public class TestServerHandler {
                 isLoginSuccess = true;
             } else {
                 System.out.println("Login failed.");
+                System.out.println("Response: " + response);
             }
         } catch (Exception e) {
             System.out.println("Error occurred while logging in.");

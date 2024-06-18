@@ -1,4 +1,4 @@
-package main.util;
+package test.util;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,7 +14,15 @@ public class User {
     private String userID;
     private Map<String, String> friendList = new HashMap<>();
     private boolean hasReservation;
-    // private Reservation reservation;
+    private Reservation reservation;
+
+    public Reservation getReservation() {
+        return reservation;
+    }
+
+    public void setReservation(Reservation reservation) {
+        this.reservation = reservation;
+    }
 
     public String getUserName() {
         return userName;
