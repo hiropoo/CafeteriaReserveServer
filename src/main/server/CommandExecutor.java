@@ -24,13 +24,17 @@ interface CommandExecutor {
 // ユーザーの登録処理
 class SignUpExecutor implements CommandExecutor {
     private static final String CHECK_USER_QUERY = "SELECT * FROM users WHERE username = ?";
-    private static final String INSERT_USER_QUERY = "INSERT INTO users (id, username, password) VALUES (?, ?, ?)";
+    private static final String INSERT_USER_QUERY = "INSERT INTO users (user_id, username, password) VALUES (?, ?, ?)";
 
     @Override
     public void execute(PrintWriter out, String args) {
+        System.out.println("Sign up executor called.");
+
         // 受け取った引数をスペースで分割し、ユーザー名とパスワードを取得
-        String name = args.split(" ")[0];
-        String password = args.split(" ")[1];
+        int userID = Integer.parseInt(args.split(" ")[0]);
+        String name = args.split(" ")[1];
+        String password = args.split(" ")[2];
+        System.out.println("userID: " + userID);
         System.out.println("username: " + name);
         System.out.println("password: " + password);
 
@@ -41,6 +45,7 @@ class SignUpExecutor implements CommandExecutor {
 
         if (nameMatcher.find() || passwordMatcher.find()) {
             out.println("Failed: Username and password should contain only alphanumeric characters.");
+            System.out.println("Failed: Username and password should contain only alphanumeric characters.");
             return;
         }
 
@@ -61,20 +66,22 @@ class SignUpExecutor implements CommandExecutor {
 
             if (resultSet.next()) {
                 out.println("Failed: Username already exists.");
+                System.out.println("Failed: Username already exists.");
                 return;
             }
 
             // ユーザーネームに重複がなければユーザーを登録
             insertStatement = connection.prepareStatement(INSERT_USER_QUERY);
-            insertStatement.setInt(1, 0);
+            insertStatement.setInt(1, userID);
             insertStatement.setString(2, name);
             insertStatement.setString(3, password);
             insertStatement.executeUpdate();
-            out.println("User " + name + " registered successfully.");
+            out.println("success");
+            System.out.println("User " + name + " registered successfully.");
 
         } catch (SQLException e) {
             out.println("Failed: Failed to register user " + name);
-            System.out.println("Failed to register user. " + name);
+            System.out.println("Failed to register user " + name);
             e.printStackTrace();
 
         } finally {
@@ -106,6 +113,8 @@ class LoginExecutor implements CommandExecutor {
 
     @Override
     public void execute(PrintWriter out, String args) {
+        System.out.println("Login executor called.");
+
         // 受け取った引数をスペースで分割し、ユーザー名とパスワードを取得
         String name = args.split(" ")[0];
         String password = args.split(" ")[1];
@@ -148,7 +157,7 @@ class LoginExecutor implements CommandExecutor {
 
         } catch (SQLException e) {
             out.println("Failed: Failed to login user " + name);
-            System.out.println("Failed to login user. " + name);
+            System.out.println("Failed to login user " + name);
             e.printStackTrace();
         } finally {
             try {
