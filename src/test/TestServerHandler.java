@@ -6,6 +6,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 import main.util.PropertyUtil;
+import main.util.User;
 
 /*
  * テスト用のサーバーハンドラ
@@ -19,12 +20,10 @@ public class TestServerHandler {
     private Socket clientSocket;
     private BufferedReader in; // サーバからの入力ストリーム
     private PrintWriter out; // サーバへの出力ストリーム
-
-    // Userインスタンスを生成（未実装）
-
+    private User user; // Userインスタンス
 
     // コンストラクタでサーバに接続
-    public TestServerHandler() {
+    public TestServerHandler(User user) {
         System.out.println("Connecting to the server...");
         try {
             clientSocket = new Socket(SERVER_IP, PORT);
@@ -36,10 +35,77 @@ public class TestServerHandler {
             e.printStackTrace();
             System.out.println("Failed to connect to the server.");
         }
+
+        // Userインスタンスを生成（仮）実際は新規登録時に生成
+        // this.user = user; // <- 実際のコード
+        user = new User("user1", "pass1", 2264000); // <- 仮のコード
     }
 
+    // ユーザ情報を送信し、新規登録が成功したかどうかを返す
+    public boolean register() {
+        String userName = user.getUserName();
+        String password = user.getPassword();
+        int studentID = user.getStudentID();
+        boolean isRegisterSuccess = false;
 
+        try {
+            out.println("signUp " + userName + " " + studentID + " " + password);
+            System.out.println("Sent: signUp " + userName + " " + password + " " + studentID);
 
+            String response = in.readLine();
+            if (response.equals("success")) {
+                System.out.println("Registration success");
+                isRegisterSuccess = true;
+            } else {
+                System.out.println("Registration failed.");
+            }
+        } catch (Exception e) {
+            System.out.println("Error occurred while registering.");
+            e.printStackTrace();
+        } finally {
+            try {
+                if (clientSocket != null) {
+                    clientSocket.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Failed to close the client socket.");
+            }
+        }
 
+        return isRegisterSuccess;
+    }
+
+    // ログイン情報を送信し、ログインが成功したかどうかを返す
+    public boolean login() {
+        String userName = user.getUserName();
+        String password = user.getPassword();
+        boolean isLoginSuccess = false;
+
+        try {
+            out.println("login " + userName + " " + password);
+            System.out.println("Sent: login " + userName + " " + password);
+
+            String response = in.readLine();
+            if (response.equals("success")) {
+                System.out.println("Login success.");
+                isLoginSuccess = true;
+            } else {
+                System.out.println("Login failed.");
+            }
+        } catch (Exception e) {
+            System.out.println("Error occurred while logging in.");
+            e.printStackTrace();
+        } finally {
+            try {
+                if (clientSocket != null) {
+                    clientSocket.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Failed to close the client socket.");
+            }
+        }
+
+        return isLoginSuccess;
+    }
 
 }
