@@ -15,6 +15,54 @@ public class User {
     private boolean hasReservation;
     // private Reservation reservation;
 
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public int getStudentID() {
+        return studentID;
+    }
+
+    public void setStudentID(int studentID) {
+        this.studentID = studentID;
+    }
+
+    public String getUserID() {
+        return userID;
+    }
+
+    public void setUserID(String userID) {
+        this.userID = userID;
+    }
+
+    public Map<String, String> getFriendList() {
+        return friendList;
+    }
+
+    public void setFriendList(Map<String, String> friendList) {
+        this.friendList = friendList;
+    }
+
+    public boolean isHasReservation() {
+        return hasReservation;
+    }
+
+    public void setHasReservation(boolean hasReservation) {
+        this.hasReservation = hasReservation;
+    }
+
     // 新規登録時に呼び出されるコンストラクタ
     public User(String userName, String password, int studentID) {
         this.userName = userName;
