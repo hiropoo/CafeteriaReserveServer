@@ -49,8 +49,8 @@ public class TestServerHandler {
         boolean isRegisterSuccess = false;
 
         try {
-            out.println("signUp " + userID + " " + userName + " " + password);
-            System.out.println("Sent: signUp " + userID + " " + userName + " " + password);
+            out.println("signUp " + userID + " " + userName + " " + password + " " + studentID);
+            System.out.println("Sent: signUp " + userID + " " + userName + " " + password + " " + studentID);
 
             String response = in.readLine();
             if (response.equals("success")) {

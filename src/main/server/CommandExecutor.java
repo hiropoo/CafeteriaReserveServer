@@ -24,19 +24,19 @@ interface CommandExecutor {
 // ユーザーの登録処理
 class SignUpExecutor implements CommandExecutor {
     private static final String CHECK_USER_QUERY = "SELECT * FROM users WHERE username = ?";
-    private static final String INSERT_USER_QUERY = "INSERT INTO users (user_id, username, password) VALUES (?, ?, ?)";
+    private static final String INSERT_USER_QUERY = "INSERT INTO users (user_id, username, password, student_id) VALUES (?, ?, ?, ?)";
 
     @Override
     public void execute(PrintWriter out, String args) {
         System.out.println("Sign up executor called.");
 
         // 受け取った引数をスペースで分割し、ユーザー名とパスワードを取得
-        int userID = Integer.parseInt(args.split(" ")[0]);
+        String userID = args.split(" ")[0];
         String name = args.split(" ")[1];
         String password = args.split(" ")[2];
-        System.out.println("userID: " + userID);
-        System.out.println("username: " + name);
-        System.out.println("password: " + password);
+        int studentID = Integer.parseInt(args.split(" ")[3]);
+        System.out.println("userID: " + userID + ", username: " + name + ", password: " + password + ", studentID: " + studentID);
+        
 
         // ユーザー名とパスワードが半角英数字以外の文字を含むかをチェック
         Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");
@@ -72,9 +72,10 @@ class SignUpExecutor implements CommandExecutor {
 
             // ユーザーネームに重複がなければユーザーを登録
             insertStatement = connection.prepareStatement(INSERT_USER_QUERY);
-            insertStatement.setInt(1, userID);
+            insertStatement.setString(1, userID);
             insertStatement.setString(2, name);
             insertStatement.setString(3, password);
+            insertStatement.setInt(4, studentID);
             insertStatement.executeUpdate();
             out.println("success");
             System.out.println("User " + name + " registered successfully.");

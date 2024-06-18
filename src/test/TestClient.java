@@ -12,7 +12,7 @@ public class TestClient {
     // クライアントを起動
     public void start() {
         // 新規登録のテスト
-        User user = new User("user3", "pass3", 2264003);
+        User user = new User("user1", "pass1", 0000001);
         TestServerHandler serverHandler = new TestServerHandler(user);
         boolean isRegisterSuccess = serverHandler.register();
     }
