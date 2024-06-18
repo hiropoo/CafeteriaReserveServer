@@ -37,27 +37,27 @@ public class TestServerHandler {
         }
 
         // Userインスタンスを生成（仮）実際は新規登録時に生成
-        // this.user = user; // <- 実際のコード
-        user = new User("user1", "pass1", 2264000); // <- 仮のコード
+        this.user = user; // <- 実際のコード
     }
 
     // ユーザ情報を送信し、新規登録が成功したかどうかを返す
     public boolean register() {
+        String userID = user.getUserID();
         String userName = user.getUserName();
         String password = user.getPassword();
         int studentID = user.getStudentID();
         boolean isRegisterSuccess = false;
 
         try {
-            out.println("signUp " + userName + " " + studentID + " " + password);
-            System.out.println("Sent: signUp " + userName + " " + password + " " + studentID);
+            out.println("signUp " + userID + " " + userName + " " + password);
+            System.out.println("Sent: signUp " + userID + " " + userName + " " + password);
 
             String response = in.readLine();
             if (response.equals("success")) {
                 System.out.println("Registration success");
                 isRegisterSuccess = true;
             } else {
-                System.out.println("Registration failed.");
+                System.out.println("Registration failed." + response);
             }
         } catch (Exception e) {
             System.out.println("Error occurred while registering.");

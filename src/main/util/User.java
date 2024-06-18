@@ -2,6 +2,7 @@ package main.util;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 /* テスト用のユーザの情報を保存するクラス
  */
@@ -69,6 +70,7 @@ public class User {
         this.password = password;
         this.studentID = studentID;
         // this.userID = uuid.getID(); // 未実装
+        this.userID = generateUserID(); // 仮の実装
         this.friendList = null;
         this.hasReservation = false;
     }
@@ -76,5 +78,11 @@ public class User {
     // フレンドの削除を行うメソッド
     public void deleteFriend(String friendID) {
         friendList.remove(friendID);
+    }
+
+    // userIDを生成するメソッド（仮）本来はUUIDを使用
+    public String generateUserID() {
+        Random random = new Random();
+        return String.valueOf(random.nextInt(1000000000));
     }
 }
