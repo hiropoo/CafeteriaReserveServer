@@ -31,7 +31,7 @@ class SignUpExecutor implements CommandExecutor {
         System.out.println("Sign up executor called.");
 
         // 受け取った引数をスペースで分割し、ユーザー名とパスワードを取得
-        String userID = args.split(" ")[0];
+        String userID = MyUUID.getUUID();
         String name = args.split(" ")[1];
         String password = args.split(" ")[2];
         int studentID = Integer.parseInt(args.split(" ")[3]);

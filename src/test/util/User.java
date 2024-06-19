@@ -17,11 +17,6 @@ public class User {
     static private Reservation reservation;
 
 
-    // 初回生成時にサーバからデータを取得 (未実装)
-    static {
-
-    }
-
     public static Reservation getReservation() {
         return reservation;
     }
@@ -83,9 +78,5 @@ public class User {
         friendList.remove(friendID);
     }
 
-    // userIDを生成するメソッド（仮）本来はUUIDを使用
-    public static String generateUserID() {
-        Random random = new Random();
-        return String.valueOf(random.nextInt(1000000000));
-    }
+
 }
