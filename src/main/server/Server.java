@@ -9,7 +9,7 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
-import main.util.PropertyUtil;
+import properties.PropertyUtil;
 
 public class Server {
     private static Map<String, CommandExecutor> commandExecutors = new HashMap<>(); // コマンドとそれに対応するクラスのマッピング

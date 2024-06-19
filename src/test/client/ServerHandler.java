@@ -5,7 +5,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-import main.util.PropertyUtil;
+import properties.PropertyUtil;
 import test.util.User;
 
 /*

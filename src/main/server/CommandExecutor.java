@@ -10,7 +10,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import main.util.MyUUID;
-import main.util.PropertyUtil;
+import properties.PropertyUtil;
 
 interface CommandExecutor {
     // 共通のDB処理用の定数
