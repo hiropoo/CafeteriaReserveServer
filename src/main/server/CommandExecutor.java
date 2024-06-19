@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import main.util.MyUUID;
 import main.util.PropertyUtil;
 
 interface CommandExecutor {
@@ -22,6 +23,8 @@ interface CommandExecutor {
 }
 
 // ユーザーの登録処理
+// 登録成功 -> "success userID"
+// 登録失敗 -> "failure message"
 class SignUpExecutor implements CommandExecutor {
     private static final String CHECK_USER_QUERY = "SELECT * FROM users WHERE username = ?";
     private static final String INSERT_USER_QUERY = "INSERT INTO users (user_id, username, password, student_id) VALUES (?, ?, ?, ?)";
@@ -32,11 +35,11 @@ class SignUpExecutor implements CommandExecutor {
 
         // 受け取った引数をスペースで分割し、ユーザー名とパスワードを取得
         String userID = MyUUID.getUUID();
-        String name = args.split(" ")[1];
-        String password = args.split(" ")[2];
-        int studentID = Integer.parseInt(args.split(" ")[3]);
-        System.out.println("userID: " + userID + ", username: " + name + ", password: " + password + ", studentID: " + studentID);
-        
+        String name = args.split(" ")[0];
+        String password = args.split(" ")[1];
+        int studentID = Integer.parseInt(args.split(" ")[2]);
+        System.out.println(
+                "userID: " + userID + ", username: " + name + ", password: " + password + ", studentID: " + studentID);
 
         // ユーザー名とパスワードが半角英数字以外の文字を含むかをチェック
         Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");
@@ -44,8 +47,8 @@ class SignUpExecutor implements CommandExecutor {
         Matcher passwordMatcher = pattern.matcher(password);
 
         if (nameMatcher.find() || passwordMatcher.find()) {
-            out.println("Failed: Username and password should contain only alphanumeric characters.");
-            System.out.println("Failed: Username and password should contain only alphanumeric characters.");
+            out.println("failure Username and password should contain only alphanumeric characters.");
+            System.out.println("failure Username and password should contain only alphanumeric characters.");
             return;
         }
 
@@ -65,8 +68,8 @@ class SignUpExecutor implements CommandExecutor {
             resultSet = checkStatement.executeQuery();
 
             if (resultSet.next()) {
-                out.println("Failed: Username already exists.");
-                System.out.println("Failed: Username already exists.");
+                out.println("failure Username already exists.");
+                System.out.println("failure Username already exists.");
                 return;
             }
 
@@ -77,12 +80,12 @@ class SignUpExecutor implements CommandExecutor {
             insertStatement.setString(3, password);
             insertStatement.setInt(4, studentID);
             insertStatement.executeUpdate();
-            out.println("success");
-            System.out.println("User " + name + " registered successfully.");
+            out.println("success " + userID);
+            System.out.println("User " + name + " registered fully.");
 
         } catch (SQLException e) {
-            out.println("Failed: Failed to register user " + name);
-            System.out.println("Failed to register user " + name);
+            out.println("failure Failed to register user " + name);
+            System.out.println("failure Failed to register user " + name);
             e.printStackTrace();
 
         } finally {
@@ -100,8 +103,8 @@ class SignUpExecutor implements CommandExecutor {
                     connection.close();
                 }
             } catch (SQLException e) {
-                out.println("Failed: Failed to close connection.");
-                System.out.println("Failed to close connection.");
+                out.println("failure Failed to close connection.");
+                System.out.println("failure Failed to close connection.");
                 e.printStackTrace();
             }
         }
@@ -128,10 +131,9 @@ class LoginExecutor implements CommandExecutor {
         Matcher passwordMatcher = pattern.matcher(password);
 
         if (nameMatcher.find() || passwordMatcher.find()) {
-            out.println("Failed: Username and password should contain only alphanumeric characters.");
+            out.println("failure Username and password should contain only alphanumeric characters.");
             return;
         }
-
 
         Connection connection = null;
         PreparedStatement statement = null;
@@ -149,16 +151,17 @@ class LoginExecutor implements CommandExecutor {
             resultSet = statement.executeQuery();
 
             if (resultSet.next()) {
-                out.println("User " + name + " logged in successfully.");
-                System.out.println("User " + name + " logged in successfully.");
+                out.println(" " + resultSet.getString("user_id") + " " + resultSet.getString("username") + " "
+                        + resultSet.getInt("student_id"));
+                System.out.println("User " + name + " logged in fully.");
             } else {
-                out.println("Failed: Invalid username or password.");
-                System.out.println("Failed: Invalid username or password.");
+                out.println("failure Invalid username or password.");
+                System.out.println("failure Invalid username or password.");
             }
 
         } catch (SQLException e) {
-            out.println("Failed: Failed to login user " + name);
-            System.out.println("Failed to login user " + name);
+            out.println("failure Failed to login user " + name);
+            System.out.println("failure Failed to login user " + name);
             e.printStackTrace();
         } finally {
             try {
@@ -172,8 +175,8 @@ class LoginExecutor implements CommandExecutor {
                     connection.close();
                 }
             } catch (SQLException e) {
-                out.println("Failed: Failed to close connection.");
-                System.out.println("Failed to close connection.");
+                out.println("failure Failed to close connection.");
+                System.out.println("failure Failed to close connection.");
                 e.printStackTrace();
             }
         }

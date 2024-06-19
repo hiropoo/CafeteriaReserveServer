@@ -37,24 +37,35 @@ public class ServerHandler {
     }
 
     // ユーザ情報を送信し、新規登録が成功したかどうかを返す
+    // 新規登録成功時には、サーバからユーザIDを取得してUserクラスに保存
+    // request -> "signUp userName password studentID"
+    // response -> "Success userID" or "Failure message"
     public boolean register() {
-        String userID = User.getUserID();
         String userName = User.getUserName();
         String password = User.getPassword();
         int studentID = User.getStudentID();
         boolean isRegisterSuccess = false;
+        String request = "signUp " + userName + " " + password + " " + studentID;
+        String response = "";
 
         try {
-            out.println("signUp " + userID + " " + userName + " " + password + " " + studentID);
-            System.out.println("Sent: signUp " + userID + " " + userName + " " + password + " " + studentID);
+            out.println(request);
+            System.out.println("Sent: " + request);
 
-            String response = in.readLine();
-            if (response.equals("success")) {
+            response = in.readLine();
+            String command = response.split(" ", 2)[0];
+            String args = response.split(" ", 2).length > 1 ? response.split(" ", 2)[1] : "";
+            System.out.println("Received: " + command + " " + args);
+
+            if (command.equals("success")) {
                 System.out.println("Registration success");
+                User.setUserID(args);   // ユーザIDをUserクラスに保存
                 isRegisterSuccess = true;
-            } else {
+            } else if(command.equals("failure")) {
                 System.out.println("Registration failed.");
-                System.out.println("Response: " + response);
+                System.out.println("message: " + args);
+            } else {
+                System.out.println("Invalid response: " + response);
             }
         } catch (Exception e) {
             System.out.println("Error occurred while registering.");
@@ -73,6 +84,7 @@ public class ServerHandler {
     }
 
     // ログイン情報を送信し、ログインが成功したかどうかを返す
+    // ログイン成功時には、ユーザ情報を取得してUserクラスに保存
     public boolean login() {
         String userName = User.getUserName();
         String password = User.getPassword();
