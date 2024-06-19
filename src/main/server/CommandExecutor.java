@@ -113,6 +113,8 @@ class SignUpExecutor implements CommandExecutor {
 }
 
 // ユーザーのログイン処理
+// ログイン成功 -> "success userID studentID"
+// ログイン失敗 -> "failure message"
 class LoginExecutor implements CommandExecutor {
     private static final String SELECT_USER_QUERY = "SELECT * FROM users WHERE username = ? AND password = ?";
 
