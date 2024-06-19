@@ -2,7 +2,6 @@ package test.util;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 /* テスト用のユーザの情報を保存するクラス
  */
@@ -15,7 +14,6 @@ public class User {
     static private Map<String, String> friendList = new HashMap<>();
     static private boolean hasReservation = false;
     static private Reservation reservation;
-
 
     public static Reservation getReservation() {
         return reservation;
@@ -77,6 +75,5 @@ public class User {
     public static void deleteFriend(String friendID) {
         friendList.remove(friendID);
     }
-
 
 }

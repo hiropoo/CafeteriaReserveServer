@@ -14,7 +14,7 @@ import main.util.PropertyUtil;
 public class Server {
     private static Map<String, CommandExecutor> commandExecutors = new HashMap<>(); // コマンドとそれに対応するクラスのマッピング
 
-    private static ServerSocket serverSocket = null;  // サーバーソケット
+    private static ServerSocket serverSocket = null; // サーバーソケット
     private static final int PORT = Integer.parseInt(PropertyUtil.getProperty("port")); // サーバーのポート番号
 
     // コマンドマップの初期化
@@ -25,7 +25,7 @@ public class Server {
 
     public static void main(String[] args) throws IOException {
         serverSocket = new ServerSocket(PORT); // サーバーソケットの作成
-        System.out.println("Server is running...");
+        System.out.println("Server is running...\n");
 
         try {
             while (true) {
@@ -43,7 +43,6 @@ public class Server {
         } finally {
             if (serverSocket != null)
                 serverSocket.close();
-
         }
     }
 
@@ -53,8 +52,8 @@ public class Server {
             // クライアントからの入力読み取り
             String request;
             while ((request = in.readLine()) != null) {
-                System.out.println("Received message: " + request);
-                
+                System.out.println("Received request: " + request);
+
                 // request(command args) -> "command" と "args" に分割
                 String[] parts = request.split(" ", 2);
                 String command = parts[0];
@@ -79,6 +78,7 @@ public class Server {
             } catch (IOException e) {
                 System.out.println("Failed to close client socket: " + e.getMessage());
             }
+            System.out.println();
         }
     }
 }

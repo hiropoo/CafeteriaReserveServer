@@ -32,7 +32,7 @@ public class ServerHandler {
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("Failed to connect to the server.");
+            System.out.println("Failed to connect to the server.\n");
         }
     }
 
@@ -126,6 +126,7 @@ public class ServerHandler {
             } catch (Exception e) {
                 System.out.println("Failed to close the client socket.");
             }
+            System.out.println();
         }
 
         return isLoginSuccess;

@@ -81,7 +81,7 @@ class SignUpExecutor implements CommandExecutor {
             insertStatement.setInt(4, studentID);
             insertStatement.executeUpdate();
             out.println("success " + userID);
-            System.out.println("User " + name + " registered fully.");
+            System.out.println("User " + name + " registered successfully.");
 
         } catch (SQLException e) {
             out.println("failure Failed to register user " + name);
@@ -107,6 +107,7 @@ class SignUpExecutor implements CommandExecutor {
                 System.out.println("failure Failed to close connection.");
                 e.printStackTrace();
             }
+            System.out.println();
         }
     }
 }
@@ -178,6 +179,7 @@ class LoginExecutor implements CommandExecutor {
                 System.out.println("failure Failed to close connection.");
                 e.printStackTrace();
             }
+            System.out.println();
         }
 
     }
