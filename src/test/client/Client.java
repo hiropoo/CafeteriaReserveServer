@@ -11,8 +11,10 @@ public class Client {
     // クライアントを起動
     public void start() {
         // 新規登録のテスト
-        User user = new User("user1", "pass1", 0000001);
-        ServerHandler serverHandler = new ServerHandler(user);
+        User.setUserName("testUser");
+        User.setPassword("testPassword");
+        User.setStudentID(1234567890);
+        ServerHandler serverHandler = new ServerHandler();
         serverHandler.register();
     }
 

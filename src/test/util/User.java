@@ -8,88 +8,83 @@ import java.util.Random;
  */
 public class User {
     /* インスタンス変数 */
-    private String userName;
-    private String password;
-    private int studentID;
-    private String userID;
-    private Map<String, String> friendList = new HashMap<>();
-    private boolean hasReservation;
-    private Reservation reservation;
+    static private String userName;
+    static private String password;
+    static private int studentID;
+    static private String userID;
+    static private Map<String, String> friendList = new HashMap<>();
+    static private boolean hasReservation = false;
+    static private Reservation reservation;
 
-    public Reservation getReservation() {
+
+    // 初回生成時にサーバからデータを取得 (未実装)
+    static {
+
+    }
+
+    public static Reservation getReservation() {
         return reservation;
     }
 
-    public void setReservation(Reservation reservation) {
-        this.reservation = reservation;
+    public static void setReservation(Reservation reservation) {
+        User.reservation = reservation;
     }
 
-    public String getUserName() {
+    public static String getUserName() {
         return userName;
     }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
+    public static void setUserName(String userName) {
+        User.userName = userName;
     }
 
-    public String getPassword() {
+    public static String getPassword() {
         return password;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public static void setPassword(String password) {
+        User.password = password;
     }
 
-    public int getStudentID() {
+    public static int getStudentID() {
         return studentID;
     }
 
-    public void setStudentID(int studentID) {
-        this.studentID = studentID;
+    public static void setStudentID(int studentID) {
+        User.studentID = studentID;
     }
 
-    public String getUserID() {
+    public static String getUserID() {
         return userID;
     }
 
-    public void setUserID(String userID) {
-        this.userID = userID;
+    public static void setUserID(String userID) {
+        User.userID = userID;
     }
 
-    public Map<String, String> getFriendList() {
+    public static Map<String, String> getFriendList() {
         return friendList;
     }
 
-    public void setFriendList(Map<String, String> friendList) {
-        this.friendList = friendList;
+    public static void setFriendList(Map<String, String> friendList) {
+        User.friendList = friendList;
     }
 
-    public boolean isHasReservation() {
+    public static boolean isHasReservation() {
         return hasReservation;
     }
 
-    public void setHasReservation(boolean hasReservation) {
-        this.hasReservation = hasReservation;
-    }
-
-    // 新規登録時に呼び出されるコンストラクタ
-    public User(String userName, String password, int studentID) {
-        this.userName = userName;
-        this.password = password;
-        this.studentID = studentID;
-        // this.userID = uuid.getID(); // 未実装
-        this.userID = generateUserID(); // 仮の実装
-        this.friendList = null;
-        this.hasReservation = false;
+    public static void setHasReservation(boolean hasReservation) {
+        User.hasReservation = hasReservation;
     }
 
     // フレンドの削除を行うメソッド
-    public void deleteFriend(String friendID) {
+    public static void deleteFriend(String friendID) {
         friendList.remove(friendID);
     }
 
     // userIDを生成するメソッド（仮）本来はUUIDを使用
-    public String generateUserID() {
+    public static String generateUserID() {
         Random random = new Random();
         return String.valueOf(random.nextInt(1000000000));
     }

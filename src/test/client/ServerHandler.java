@@ -20,10 +20,9 @@ public class ServerHandler {
     private Socket clientSocket;
     private BufferedReader in; // サーバからの入力ストリーム
     private PrintWriter out; // サーバへの出力ストリーム
-    private User user; // Userインスタンス
 
     // コンストラクタでサーバに接続
-    public ServerHandler(User user) {
+    public ServerHandler() {
         System.out.println("Connecting to the server...");
         try {
             clientSocket = new Socket(SERVER_IP, PORT);
@@ -35,17 +34,14 @@ public class ServerHandler {
             e.printStackTrace();
             System.out.println("Failed to connect to the server.");
         }
-
-        // Userインスタンスを生成（仮）実際は新規登録時に生成
-        this.user = user; // <- 実際のコード
     }
 
     // ユーザ情報を送信し、新規登録が成功したかどうかを返す
     public boolean register() {
-        String userID = user.getUserID();
-        String userName = user.getUserName();
-        String password = user.getPassword();
-        int studentID = user.getStudentID();
+        String userID = User.getUserID();
+        String userName = User.getUserName();
+        String password = User.getPassword();
+        int studentID = User.getStudentID();
         boolean isRegisterSuccess = false;
 
         try {
@@ -78,8 +74,8 @@ public class ServerHandler {
 
     // ログイン情報を送信し、ログインが成功したかどうかを返す
     public boolean login() {
-        String userName = user.getUserName();
-        String password = user.getPassword();
+        String userName = User.getUserName();
+        String password = User.getPassword();
         boolean isLoginSuccess = false;
 
         try {
