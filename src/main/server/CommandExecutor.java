@@ -151,9 +151,8 @@ class LoginExecutor implements CommandExecutor {
             resultSet = statement.executeQuery();
 
             if (resultSet.next()) {
-                out.println(" " + resultSet.getString("user_id") + " " + resultSet.getString("username") + " "
-                        + resultSet.getInt("student_id"));
-                System.out.println("User " + name + " logged in fully.");
+                out.println("success " + resultSet.getString("user_id") + " " + resultSet.getInt("student_id"));
+                System.out.println("User " + name + " logged in successfully");
             } else {
                 out.println("failure Invalid username or password.");
                 System.out.println("failure Invalid username or password.");

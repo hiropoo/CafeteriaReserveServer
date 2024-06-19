@@ -14,8 +14,8 @@ public class Client {
         User.setUserName("testUser4");
         User.setPassword("testPassword4");
         User.setStudentID(1234567890);
-        ServerHandler serverHandler = new ServerHandler();
-        serverHandler.register();
+        // ログインのテスト
+        new ServerHandler().login();
     }
 
 }

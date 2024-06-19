@@ -59,9 +59,9 @@ public class ServerHandler {
 
             if (command.equals("success")) {
                 System.out.println("Registration success");
-                User.setUserID(args);   // ユーザIDをUserクラスに保存
+                User.setUserID(args); // ユーザIDをUserクラスに保存
                 isRegisterSuccess = true;
-            } else if(command.equals("failure")) {
+            } else if (command.equals("failure")) {
                 System.out.println("Registration failed.");
                 System.out.println("message: " + args);
             } else {
@@ -78,29 +78,42 @@ public class ServerHandler {
             } catch (Exception e) {
                 System.out.println("Failed to close the client socket.");
             }
+            System.out.println();
         }
 
         return isRegisterSuccess;
     }
 
     // ログイン情報を送信し、ログインが成功したかどうかを返す
-    // ログイン成功時には、ユーザ情報を取得してUserクラスに保存
+    // ログイン成功時には、ユーザーIDと学籍番号を取得してUserクラスに保存
+    // request -> "login userName password"
+    // response -> "success userID studentID" or "Failure message"
     public boolean login() {
         String userName = User.getUserName();
         String password = User.getPassword();
         boolean isLoginSuccess = false;
+        String request = "login " + userName + " " + password;
+        String response = "";
 
         try {
-            out.println("login " + userName + " " + password);
+            out.println(request);
             System.out.println("Sent: login " + userName + " " + password);
 
-            String response = in.readLine();
-            if (response.equals("success")) {
+            response = in.readLine();
+            String command = response.split(" ", 2)[0];
+            String args = response.split(" ", 2).length > 1 ? response.split(" ", 2)[1] : "";
+            System.out.println("Received: " + command + " " + args);
+
+            if (command.equals("success")) {
                 System.out.println("Login success.");
+                User.setUserID(args.split(" ")[0]); // ユーザIDをUserクラスに保存
+                User.setStudentID(Integer.parseInt(args.split(" ")[1])); // 学籍番号をUserクラスに保存
                 isLoginSuccess = true;
-            } else {
+            } else if (command.equals("failure")) {
                 System.out.println("Login failed.");
-                System.out.println("Response: " + response);
+                System.out.println("Response: " + args);
+            } else {
+                System.out.println("Invalid response: " + response);
             }
         } catch (Exception e) {
             System.out.println("Error occurred while logging in.");
