@@ -17,12 +17,12 @@ public class ServerHandler {
     static final int PORT = Integer.parseInt(PropertyUtil.getProperty("port")); // サーバーのポート番号
 
     /* インスタンス変数 */
-    private Socket clientSocket;
-    private BufferedReader in; // サーバからの入力ストリーム
-    private PrintWriter out; // サーバへの出力ストリーム
+    private static Socket clientSocket;
+    private static BufferedReader in; // サーバからの入力ストリーム
+    private static PrintWriter out; // サーバへの出力ストリーム
 
-    // コンストラクタでサーバに接続
-    public ServerHandler() {
+    // サーバに接続するメソッド
+    private static void connect() throws RuntimeException {
         System.out.println("Connecting to the server...");
         try {
             clientSocket = new Socket(SERVER_IP, PORT);
@@ -31,16 +31,16 @@ public class ServerHandler {
             out = new PrintWriter(clientSocket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         } catch (Exception e) {
-            e.printStackTrace();
             System.out.println("Failed to connect to the server.\n");
+            throw new RuntimeException("Failed to connect to the server.");
         }
     }
 
     // ユーザ情報を送信し、新規登録が成功したかどうかを返す
     // 新規登録成功時には、サーバからユーザIDを取得してUserクラスに保存
     // request -> "signUp userName password studentID"
-    // response -> "Success userID" or "Failure message"
-    public boolean register() {
+    // response -> "Success userID" or "failure message"
+    public static boolean register() {
         String userName = User.getUserName();
         String password = User.getPassword();
         int studentID = User.getStudentID();
@@ -48,7 +48,11 @@ public class ServerHandler {
         String request = "signUp " + userName + " " + password + " " + studentID;
         String response = "";
 
+        System.out.println("Registering user: " + userName + " " + password + " " + studentID);
+
         try {
+            connect();
+
             out.println(request);
             System.out.println("Sent: " + request);
 
@@ -67,6 +71,7 @@ public class ServerHandler {
             } else {
                 System.out.println("Invalid response: " + response);
             }
+        } catch (RuntimeException e) {
         } catch (Exception e) {
             System.out.println("Error occurred while registering.");
             e.printStackTrace();
@@ -87,15 +92,19 @@ public class ServerHandler {
     // ログイン情報を送信し、ログインが成功したかどうかを返す
     // ログイン成功時には、ユーザーIDと学籍番号を取得してUserクラスに保存
     // request -> "login userName password"
-    // response -> "success userID studentID" or "Failure message"
-    public boolean login() {
+    // response -> "success userID studentID" or "failure message"
+    public static boolean login() {
         String userName = User.getUserName();
         String password = User.getPassword();
         boolean isLoginSuccess = false;
         String request = "login " + userName + " " + password;
         String response = "";
 
+        System.out.println("Logging in: " + userName + " " + password);
+
         try {
+            connect();
+
             out.println(request);
             System.out.println("Sent: login " + userName + " " + password);
 
@@ -115,6 +124,7 @@ public class ServerHandler {
             } else {
                 System.out.println("Invalid response: " + response);
             }
+        } catch (RuntimeException e) {
         } catch (Exception e) {
             System.out.println("Error occurred while logging in.");
             e.printStackTrace();
