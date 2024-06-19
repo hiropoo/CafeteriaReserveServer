@@ -17,10 +17,10 @@ public class Client {
         User.setStudentID(1234567890);
 
         // 新規登録のテスト
-        new ServerHandler().register();
+        ServerHandler.register();
 
         // ログインのテスト
-        new ServerHandler().login();
+        ServerHandler.login();
     }
 
 }
