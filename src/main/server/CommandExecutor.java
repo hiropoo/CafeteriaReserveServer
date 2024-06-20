@@ -14,7 +14,8 @@ import properties.PropertyUtil;
 
 interface CommandExecutor {
     // 共通のDB処理用の定数
-    static final String DB_URL = PropertyUtil.getProperty("db_url"); // データベースのURL
+    static final String DB_NAME = PropertyUtil.getProperty("db_name"); // データベースの名前
+    static final String DB_URL = PropertyUtil.getProperty("db_url") + DB_NAME; // データベースのURL
     static final String DB_USER = PropertyUtil.getProperty("db_user"); // データベースのユーザー名
     static final String DB_PASS = PropertyUtil.getProperty("db_pass"); // データベースのパスワード
 
