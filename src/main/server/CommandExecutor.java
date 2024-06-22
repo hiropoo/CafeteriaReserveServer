@@ -23,9 +23,11 @@ interface CommandExecutor {
     void execute(PrintWriter out, String args);
 }
 
-// ユーザーの登録処理
-// 登録成功 -> "success userID"
-// 登録失敗 -> "failure message"
+/*
+ * ユーザーの登録処理
+ * request -> "signUp userName password studentID"
+ * response -> "Success userID" or "failure message"
+ */
 class SignUpExecutor implements CommandExecutor {
     private static final String CHECK_USER_QUERY = "SELECT * FROM users WHERE username = ?";
     private static final String INSERT_USER_QUERY = "INSERT INTO users (user_id, username, password, student_id) VALUES (?, ?, ?, ?)";
@@ -113,9 +115,11 @@ class SignUpExecutor implements CommandExecutor {
     }
 }
 
-// ユーザーのログイン処理
-// ログイン成功 -> "success userID studentID"
-// ログイン失敗 -> "failure message"
+/*
+ * ログイン処理
+ * request -> "login userName password"
+ * response -> "success userID studentID" or "failure message"
+ */
 class LoginExecutor implements CommandExecutor {
     private static final String SELECT_USER_QUERY = "SELECT * FROM users WHERE username = ? AND password = ?";
 
@@ -185,5 +189,104 @@ class LoginExecutor implements CommandExecutor {
             System.out.println();
         }
 
+    }
+}
+
+/*
+ * 友達リスト取得処理
+ * request -> "fetchFriend userID"
+ * response -> "success userID1:userName1 userID2:userName2 ..." or
+ * "failure message"
+ */
+class FetchFriendExecutor implements CommandExecutor {
+
+    @Override
+    public void execute(PrintWriter out, String args) {
+    }
+}
+
+/*
+ * 友達追加処理
+ * request -> "addFriend userID friendID"
+ * response -> "success friendID:friendName" or "failure message"
+ */
+class AddFriendExecutor implements CommandExecutor {
+
+    @Override
+    public void execute(PrintWriter out, String args) {
+    }
+}
+
+/*
+ * 友達削除処理
+ * request -> "removeFriend userID friendID"
+ * response -> "success" or "failure message"
+ */
+class RemoveFriendExecutor implements CommandExecutor {
+
+    @Override
+    public void execute(PrintWriter out, String args) {
+    }
+}
+
+/*
+ * 予約情報取得処理
+ * request -> "fetchReservation userID"
+ * response ->
+ * "success userID:userName,userID:userName,... cafeNum seatNum startTime endTime went"
+ */
+class FetchReservationExecutor implements CommandExecutor {
+
+    @Override
+    public void execute(PrintWriter out, String args) {
+    }
+}
+
+/*
+ * 予約追加処理
+ * request ->
+ * "addReservation userID1,userID2,... cafeNum seatNum startTime endTime"
+ * response -> "success" or "failure message"
+ */
+class AddReservationExecutor implements CommandExecutor {
+
+    @Override
+    public void execute(PrintWriter out, String args) {
+    }
+}
+
+/*
+ * 予約キャンセル処理
+ * request -> "removeReservation userID1,userID2,..."
+ * response -> "success" or "failure message"
+ */
+class RemoveReservationExecutor implements CommandExecutor {
+
+    @Override
+    public void execute(PrintWriter out, String args) {
+    }
+}
+
+/*
+ * 座席空き情報取得処理
+ * request -> "fetchAvailableSeats cafeNum startTime endTime"
+ * response -> "success seatNum1,seatNum2,..." or "failure message"
+ */
+class FetchAvailableSeatsExecutor implements CommandExecutor {
+
+    @Override
+    public void execute(PrintWriter out, String args) {
+    }
+}
+
+/*
+ * 位置情報から学食にきたかどうかを更新する処理
+ * request -> "updateArrived userID cafeNum"
+ * response -> "success" or "failure message"
+ */
+class UpdateArrivedExecutor implements CommandExecutor {
+
+    @Override
+    public void execute(PrintWriter out, String args) {
     }
 }
