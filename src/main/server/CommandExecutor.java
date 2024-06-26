@@ -199,9 +199,84 @@ class LoginExecutor implements CommandExecutor {
  * "failure message"
  */
 class FetchFriendExecutor implements CommandExecutor {
+    static final String SELECT_FRIEND_QUERY = "SELECT * FROM friends WHERE user_id1 = ? OR user_id2 = ?";
+    static final String SELECT_USER_QUERY = "SELECT * FROM users WHERE user_id = ?";
 
     @Override
     public void execute(PrintWriter out, String args) {
+        System.out.println("Fetch friend executor called.");
+
+        String thisUserID= args;
+
+        Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");    //ユーザーIDが半角英数字以外の文字を含むかをチェック
+        Matcher userIDMatcher = pattern.matcher(thisUserID);
+        if (userIDMatcher.find()) {
+            out.println("failure UserID should contain only alphanumeric characters."); 
+            return;
+        }
+
+        Connection connection = null;
+        PreparedStatement statement = null;
+        ResultSet resultSet = null, resultSet2= null;
+        try{
+            connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+            System.out.println("Connected to DB.");
+
+            statement = connection.prepareStatement(SELECT_FRIEND_QUERY);
+            statement.setString(1, thisUserID);     //このユーザが含まれるデータを探す
+            statement.setString(2, thisUserID);
+            resultSet = statement.executeQuery();
+
+            String user1, user2, friendName= "", friendList= "";
+            if (resultSet.next()) {
+                do {
+                    user1= resultSet.getString("user_id1");
+                    user2= resultSet.getString("user_id2");
+                    statement = connection.prepareStatement(SELECT_USER_QUERY);
+                    if(user1.equals(thisUserID)){           //このユーザでない方（友達）のユーザ名を取得する
+                        statement.setString(1, user2);  
+                        friendList= friendList + " " + user2;       //返送する友達リストにユーザIDを追加
+                    }else if(user2.equals(thisUserID)){
+                        statement.setString(1, user1);
+                        friendList= friendList + " " + user1;
+                    }
+                    resultSet2 = statement.executeQuery();
+                    if (resultSet2.next()) {
+                        friendName= resultSet2.getString("username");
+                        friendList= friendList + ":" + friendName;       //返送する友達リストにユーザ名を追加
+                    }
+                }while (resultSet.next());
+                out.println("success" + friendList);
+                System.out.println("FriendList:" + friendList + " fetched successfully");
+            }else {
+                out.println("success "); 
+                System.out.println("success This user has no friends currently.");      /*エラーと友達いないのを区別できない*/
+            }
+        } catch (SQLException e) {
+            out.println("failure Failed to fetch friend.");  
+            System.out.println("failure Failed to fetch friend.");
+            e.printStackTrace();
+        } finally {
+            try {
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+                if (resultSet2 != null) {
+                    resultSet2.close();
+                }
+                if (statement != null) {
+                    statement.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                out.println("failure Failed to close connection.");
+                System.out.println("failure Failed to close connection.");
+                e.printStackTrace();
+            }
+            System.out.println();
+        }
     }
 }
 
@@ -211,9 +286,75 @@ class FetchFriendExecutor implements CommandExecutor {
  * response -> "success friendID:friendName" or "failure message"
  */
 class AddFriendExecutor implements CommandExecutor {
+    static final String ADD_FRIEND_QUERY = "INSERT INTO friends (user_id1, user_id2) VALUES (?, ?)";
 
     @Override
     public void execute(PrintWriter out, String args) {
+        System.out.println("Add friend executor called.");
+
+        String userID = args.split(" ")[0];    //引数をスペースで分割し、ユーザーIDと追加する友達のIDを取得
+        String friendID = args.split(" ")[1];
+
+        Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");    //ユーザーIDとフレンドIDが半角英数字以外の文字を含むかをチェック
+        Matcher userIDMatcher = pattern.matcher(userID);
+        Matcher friendIDMatcher = pattern.matcher(friendID);
+        if (userIDMatcher.find() || friendIDMatcher.find()) {
+            out.println("failure UserID should contain only alphanumeric characters.");
+            return;
+        }
+
+        Connection connection = null;
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+        try {
+            connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);     //データベースに接続
+            System.out.println("Connected to DB.");
+
+            statement = connection.prepareStatement(ADD_FRIEND_QUERY);   //このフレンド関係をfriendsテーブルに追加
+            statement.setString(1, userID);
+            statement.setString(2, friendID);
+            statement.executeUpdate();
+
+            statement = connection.prepareStatement("SELECT * FROM friends WHERE user_id1 = ? OR user_id2 = ?");
+            statement.setString(1, userID);
+            statement.setString(2, friendID);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                String thisUser= resultSet.getString("user_id1");   //データの記録に成功したかを確認
+                String friend= resultSet.getString("user_id2");     /*長いからexecuteUpdate()の返り値が１ならokに変更する？*/
+                if(thisUser.equals(userID) && friend.equals(friendID)){
+                    out.println("success friendID: " + friend); 
+                    System.out.println("FriendID: " + friend + " added successfully");
+                }else {
+                    out.println("failure Failed to add friend.");
+                    System.out.println("failure Failed to add friend.");
+                }
+            } else {
+                out.println("failure Failed to add friend.");
+                System.out.println("failure Failed to add friend.");
+            }
+        } catch (SQLException e) {
+            out.println("failure Failed to add friend.");
+            System.out.println("failure Failed to add friend.");
+            e.printStackTrace();
+        } finally {
+            try {
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+                if (statement != null) {
+                    statement.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                out.println("failure Failed to close connection.");
+                System.out.println("failure Failed to close connection.");
+                e.printStackTrace();
+            }
+            System.out.println();
+        }
     }
 }
 
@@ -223,9 +364,63 @@ class AddFriendExecutor implements CommandExecutor {
  * response -> "success" or "failure message"
  */
 class RemoveFriendExecutor implements CommandExecutor {
+    static final String REMOVE_FRIEND_QUERY = "DELETE FROM friends WHERE (user_id1 = ? AND user_id2 = ?) OR (user_id1 = ? AND user_id2 = ?)";
 
     @Override
     public void execute(PrintWriter out, String args) {
+        System.out.println("Remove friend executor called.");
+
+        String userID = args.split(" ")[0];     //argsからユーザIDとフレンドIDを得る
+        String friendID = args.split(" ")[1];
+
+        Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");    //ユーザーIDが半角英数字以外の文字を含むかをチェック
+        Matcher userIDMatcher = pattern.matcher(userID);
+        Matcher friendIDMatcher = pattern.matcher(friendID);
+        if (userIDMatcher.find() || friendIDMatcher.find()) {
+            out.println("failure UserID and friendID should contain only alphanumeric characters."); 
+            return;
+        }
+
+        Connection connection = null;
+        PreparedStatement statement = null;
+        try {
+            connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS); //データベースに接続
+            System.out.println("Connected to DB.");
+
+            statement = connection.prepareStatement(REMOVE_FRIEND_QUERY);
+            statement.setString(1, userID);
+            statement.setString(2, friendID);
+            statement.setString(3, friendID);
+            statement.setString(4, userID);
+
+            int rowsAffected = statement.executeUpdate(); //このフレンド関係を削除する
+
+            if (rowsAffected > 0) {
+                out.println("success Friend removed successfully.");
+                System.out.println("success Friend removed successfully.");
+            } else {
+                out.println("failure Failed to remove friend.");
+                System.out.println("failure Failed to remove friend.");
+            }
+        } catch (SQLException e) {
+            out.println("failure Failed to remove friend.");
+            System.out.println("failure Failed to remove friend.");
+            e.printStackTrace();
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                out.println("failure Failed to close connection.");
+                System.out.println("failure Failed to close connection.");
+                e.printStackTrace();
+            }
+            System.out.println();
+        }
     }
 }
 
@@ -236,7 +431,7 @@ class RemoveFriendExecutor implements CommandExecutor {
  * "success userID:userName,userID:userName,... cafeNum seatNum startTime endTime went"
  */
 class FetchReservationExecutor implements CommandExecutor {
-
+    
     @Override
     public void execute(PrintWriter out, String args) {
     }
