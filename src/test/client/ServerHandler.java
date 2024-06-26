@@ -4,7 +4,9 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.text.ParseException;
 import java.util.Date;
+import java.util.Map;
 
 import properties.PropertyUtil;
 import test.util.User;
@@ -65,8 +67,9 @@ public class ServerHandler {
             System.out.println("Received: " + command + " " + args);
 
             if (command.equals("success")) {
-                System.out.println("Registration success");
                 User.setUserID(args); // ユーザIDをUserクラスに保存
+
+                System.out.println("Registration success");
                 isRegisterSuccess = true;
             } else if (command.equals("failure")) {
                 System.out.println("Registration failed.");
@@ -79,14 +82,7 @@ public class ServerHandler {
             System.out.println("Error occurred while registering.");
             e.printStackTrace();
         } finally {
-            try {
-                if (clientSocket != null) {
-                    clientSocket.close();
-                }
-            } catch (Exception e) {
-                System.out.println("Failed to close the client socket.");
-            }
-            System.out.println();
+            disconnect();
         }
 
         return isRegisterSuccess;
@@ -111,7 +107,7 @@ public class ServerHandler {
             connect();
 
             out.println(request);
-            System.out.println("Sent: login " + userName + " " + password);
+            System.out.println("Sent: " + request);
 
             response = in.readLine();
             String command = response.split(" ", 2)[0];
@@ -119,9 +115,10 @@ public class ServerHandler {
             System.out.println("Received: " + command + " " + args);
 
             if (command.equals("success")) {
-                System.out.println("Login success.");
                 User.setUserID(args.split(" ")[0]); // ユーザIDをUserクラスに保存
                 User.setStudentID(Integer.parseInt(args.split(" ")[1])); // 学籍番号をUserクラスに保存
+                
+                System.out.println("Login success.");
                 isLoginSuccess = true;
             } else if (command.equals("failure")) {
                 System.out.println("Login failed.");
@@ -134,14 +131,7 @@ public class ServerHandler {
             System.out.println("Error occurred while logging in.");
             e.printStackTrace();
         } finally {
-            try {
-                if (clientSocket != null) {
-                    clientSocket.close();
-                }
-            } catch (Exception e) {
-                System.out.println("Failed to close the client socket.");
-            }
-            System.out.println();
+            disconnect();
         }
 
         return isLoginSuccess;
@@ -155,7 +145,49 @@ public class ServerHandler {
      * "failure message"
      */
     public static boolean fetchFriend() {
-        return false;
+        String userId = User.getUserID();
+        boolean isFetchSuccess = false;
+        String request = "fetchFriend " + userId;
+        String response = "";
+
+        System.out.println("Fetching friend list for user: " + userId);
+
+        try {
+            connect();
+
+            out.println(request);
+            System.out.println("Sent: " + request);
+
+            response = in.readLine();
+            String command = response.split(" ", 2)[0];
+            String args = response.split(" ", 2).length > 1 ? response.split(" ", 2)[1] : "";
+            System.out.println("Received: " + command + " " + args);
+
+            if (command.equals("success")) {
+                String[] friends = args.split(" ");
+                for (String friend : friends) {
+                    String friendId = friend.split(":")[0];
+                    String friendName = friend.split(":")[1];
+                    User.getFriendList().put(friendId, friendName); // 友達のユーザIDとユーザ名をUserクラスに保存
+                }
+
+                System.out.println("Friend list fetched successfully.");
+                isFetchSuccess = true;
+            } else if (command.equals("failure")) {
+                System.out.println("Failed to fetch friend list.");
+                System.out.println("Response: " + args);
+            } else {
+                System.out.println("Invalid response: " + response);
+            }
+        } catch (RuntimeException e) {
+        } catch (Exception e) {
+            System.out.println("Error occurred while fetching friend list.");
+            e.printStackTrace();
+        } finally {
+            disconnect();
+        }
+
+        return isFetchSuccess;
     }
 
     /*
@@ -164,8 +196,63 @@ public class ServerHandler {
      * request -> "addFriend userID friendID"
      * response -> "success friendID:friendName" or "failure message"
      */
-    public static boolean addFriend() {
-        return false;
+    public static boolean addFriend(String friendID) {
+        String userId = User.getUserID();
+        Map<String, String> friendList = User.getFriendList();
+        boolean isAddSuccess = false;
+        String request = "addFriend " + userId + " " + friendID;
+        String response = "";
+
+        System.out.println("Adding friend: " + userId + " " + friendID);
+
+        try {
+            connect();
+
+            out.println(request);
+            System.out.println("Sent: " + request);
+
+            response = in.readLine();
+            String command = response.split(" ", 2)[0];
+            String args = response.split(" ", 2).length > 1 ? response.split(" ", 2)[1] : "";
+            System.out.println("Received: " + command + " " + args);
+
+            if (command.equals("success")) {
+                String friendName = args.split(":")[1];
+                if (friendList.containsKey(friendID)) {
+                    System.out.println("Friend already exists.");
+                } else {
+                    // 友達のユーザIDとユーザ名をUserクラスに保存
+                    friendList.put(friendID, friendName);
+                    System.out.println("Friend added successfully.");
+                }
+
+                isAddSuccess = true;
+            } else if (command.equals("failure")) {
+                System.out.println("Failed to add friend.");
+                System.out.println("Response: " + args);
+            } else {
+                System.out.println("Invalid response: " + response);
+            }
+        } catch (RuntimeException e) {
+        } catch (Exception e) {
+            System.out.println("Error occurred while adding friend.");
+            e.printStackTrace();
+        } finally {
+            disconnect();
+        }
+
+        return isAddSuccess;
+    }
+
+    private static void disconnect() {
+        try {
+            if (clientSocket != null) {
+                clientSocket.close();
+            }
+        } catch (Exception e) {
+            System.out.println("Failed to close the client socket.");
+        }
+        System.out.println();
     }
 
     /*
@@ -174,8 +261,50 @@ public class ServerHandler {
      * request -> "removeFriend userID friendID"
      * response -> "success" or "failure message"
      */
-    public static boolean removeFriend() {
-        return false;
+    public static boolean removeFriend(String friendID) {
+        String userId = User.getUserID();
+        Map<String, String> friendList = User.getFriendList();
+        boolean isRemoveSuccess = false;
+        String request = "removeFriend " + userId + " " + friendID;
+
+        System.out.println("Removing friend: " + userId + " " + friendID);
+
+        try {
+            connect();
+
+            out.println(request);
+            System.out.println("Sent: " + request);
+
+            String response = in.readLine();
+            String command = response.split(" ", 2)[0];
+            String args = response.split(" ", 2).length > 1 ? response.split(" ", 2)[1] : "";
+            System.out.println("Received: " + command + " " + args);
+
+            if (command.equals("success")) {
+                if (friendList.containsKey(friendID)) {
+                    // 友達のユーザIDとユーザ名をUserクラスから削除
+                    friendList.remove(friendID);
+                    System.out.println("Friend removed successfully.");
+                } else {
+                    System.out.println("Friend does not exist.");
+                }
+
+                isRemoveSuccess = true;
+            } else if (command.equals("failure")) {
+                System.out.println("Failed to remove friend.");
+                System.out.println("Response: " + args);
+            } else {
+                System.out.println("Invalid response: " + response);
+            }
+        } catch (RuntimeException e) {
+        } catch (Exception e) {
+            System.out.println("Error occurred while removing friend.");
+            e.printStackTrace();
+        } finally {
+            disconnect();
+        }
+
+        return isRemoveSuccess;
     }
 
     /*
@@ -183,10 +312,51 @@ public class ServerHandler {
      * 予約情報取得成功時には、予約情報をUserクラスに保存
      * request -> "fetchReservation userID"
      * response ->
-     * "success userID:userName,userID:userName,... cafeNum seatNum startTime endTime went"
+     * "success userID,userID,... cafeNum seatNum startTime endTime went"
      */
     public static boolean fetchReservation() {
-        return false;
+        String userId = User.getUserID();
+        boolean isFetchSuccess = false;
+        String request = "fetchReservation " + userId;
+        String response = "";
+
+        System.out.println("Fetching reservation for user: " + userId);
+
+        try {
+            connect();
+
+            out.println(request);
+            System.out.println("Sent: " + request);
+
+            response = in.readLine();
+            String command = response.split(" ", 2)[0];
+            String args = response.split(" ", 2).length > 1 ? response.split(" ", 2)[1] : "";
+            System.out.println("Received: " + command + " " + args);
+
+            if (command.equals("success")) {
+                // 予約情報をUserクラスに保存 
+                // エラー時はParseExceptionをthrow
+                User.getReservation().fromResponse(args);   
+
+                System.out.println("Reservation fetched successfully.");
+                isFetchSuccess = true;
+            } else if (command.equals("failure")) {
+                System.out.println("Failed to fetch reservation.");
+                System.out.println("Response: " + args);
+            } else {
+                System.out.println("Invalid response: " + response);
+            }
+        } catch (ParseException e) {
+            System.out.println("Failed to set reservation data.");
+        } catch (RuntimeException e) {
+        } catch (Exception e) {
+            System.out.println("Error occurred while fetching reservation.");
+            e.printStackTrace();
+        } finally {
+            disconnect();
+        }
+
+        return isFetchSuccess;
     }
 
     /*
