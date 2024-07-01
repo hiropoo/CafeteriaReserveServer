@@ -1,11 +1,9 @@
 package test.util;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 public class Reservation {
@@ -16,16 +14,15 @@ public class Reservation {
     private static List<Integer> seatNums; // 予約した席の番号
     private static List<String> members; // 予約メンバー
     private static boolean isArrived; // 予約時間までに来たかどうか
-    
-    
+
     public static LocalDateTime getStartTime() {
         return startTime;
     }
-    
+
     public static void setStartTime(LocalDateTime date) {
         Reservation.startTime = date;
     }
-    
+
     public static LocalDateTime getEndTime() {
         return endTime;
     }
