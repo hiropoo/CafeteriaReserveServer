@@ -8,29 +8,28 @@ import java.util.List;
 
 public class Reservation {
     /* インスタンス変数 */
-    private Date startTime; // 予約開始時間
-    private Date endTime; // 予約終了時間
-    private int cafeNum; // 予約した学食の番号
-    private List<Integer> seatNums; // 予約した席の番号
-    private List<String> members; // 予約メンバー
-    private boolean isArrived; // 予約時間までに来たかどうか
-
-    /* コンストラクタ */
-    public Reservation(Date startTime, Date endTime, int cafeNum, List<Integer> seatNums, List<String> members) {
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.cafeNum = cafeNum;
-        this.seatNums = seatNums;
-        this.members = members;
-        this.isArrived = false;
-    }
-
+    private static Date startTime; // 予約開始時間
+    private static Date endTime; // 予約終了時間
+    private static int cafeNum; // 予約した学食の番号
+    private static List<Integer> seatNums; // 予約した席の番号
+    private static List<String> members; // 予約メンバー
+    private static boolean isArrived; // 予約時間までに来たかどうか
+    
+    
     public Date getStartTime() {
         return startTime;
     }
-
+    
     public void setStartTime(Date date) {
-        this.startTime = date;
+        Reservation.startTime = date;
+    }
+    
+    public Date getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(Date endTime) {
+        Reservation.endTime = endTime;
     }
 
     public int getCafeNum() {
@@ -38,7 +37,7 @@ public class Reservation {
     }
 
     public void setCafeNum(int cafeNum) {
-        this.cafeNum = cafeNum;
+        Reservation.cafeNum = cafeNum;
     }
 
     public List<Integer> getSeatNums() {
@@ -46,7 +45,7 @@ public class Reservation {
     }
 
     public void setSeatNums(List<Integer> seatNums) {
-        this.seatNums = seatNums;
+        Reservation.seatNums = seatNums;
     }
 
     public boolean isArrived() {
@@ -54,7 +53,7 @@ public class Reservation {
     }
 
     public void setArrived(boolean isArrived) {
-        this.isArrived = isArrived;
+        Reservation.isArrived = isArrived;
     }
 
     public List<String> getMembers() {
@@ -62,7 +61,17 @@ public class Reservation {
     }
 
     public void setMembers(List<String> members) {
-        this.members = members;
+        Reservation.members = members;
+    }
+
+    /* 予約情報をクリア */
+    public void clear() {
+        Reservation.startTime = null;
+        Reservation.endTime = null;
+        Reservation.cafeNum = -1;
+        Reservation.seatNums = null;
+        Reservation.members = null;
+        Reservation.isArrived = false;
     }
 
     /*
@@ -88,12 +97,12 @@ public class Reservation {
         Date startTime = dateFormat.parse(splitData[3]);
         Date endTime = dateFormat.parse(splitData[4]);
 
-        this.members = members;
-        this.cafeNum = cafeNum;
-        this.seatNums = seatNums;
-        this.isArrived = went;
-        this.startTime = startTime;
-        this.endTime = endTime;
+        Reservation.members = members;
+        Reservation.cafeNum = cafeNum;
+        Reservation.seatNums = seatNums;
+        Reservation.isArrived = went;
+        Reservation.startTime = startTime;
+        Reservation.endTime = endTime;
     }
 
 }
