@@ -6,6 +6,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import properties.PropertyUtil;
@@ -25,7 +26,7 @@ public class ServerHandler {
     private static PrintWriter out; // サーバへの出力ストリーム
 
     // サーバに接続するメソッド
-    private static void connect() throws RuntimeException {
+    private static void connect() throws ConnectionException {
         System.out.println("Connecting to the server...");
         try {
             clientSocket = new Socket(SERVER_IP, PORT);
@@ -35,7 +36,7 @@ public class ServerHandler {
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         } catch (Exception e) {
             System.out.println("Failed to connect to the server.\n");
-            throw new RuntimeException("Failed to connect to the server.");
+            throw new ConnectionException("Failed to connect to the server.");
         }
     }
 
@@ -77,7 +78,7 @@ public class ServerHandler {
             } else {
                 System.out.println("Invalid response: " + response);
             }
-        } catch (RuntimeException e) {
+        } catch (ConnectionException e) {
         } catch (Exception e) {
             System.out.println("Error occurred while registering.");
             e.printStackTrace();
@@ -117,7 +118,7 @@ public class ServerHandler {
             if (command.equals("success")) {
                 User.setUserID(args.split(" ")[0]); // ユーザIDをUserクラスに保存
                 User.setStudentID(Integer.parseInt(args.split(" ")[1])); // 学籍番号をUserクラスに保存
-                
+
                 System.out.println("Login success.");
                 isLoginSuccess = true;
             } else if (command.equals("failure")) {
@@ -126,7 +127,7 @@ public class ServerHandler {
             } else {
                 System.out.println("Invalid response: " + response);
             }
-        } catch (RuntimeException e) {
+        } catch (ConnectionException e) {
         } catch (Exception e) {
             System.out.println("Error occurred while logging in.");
             e.printStackTrace();
@@ -179,7 +180,7 @@ public class ServerHandler {
             } else {
                 System.out.println("Invalid response: " + response);
             }
-        } catch (RuntimeException e) {
+        } catch (ConnectionException e) {
         } catch (Exception e) {
             System.out.println("Error occurred while fetching friend list.");
             e.printStackTrace();
@@ -233,7 +234,7 @@ public class ServerHandler {
             } else {
                 System.out.println("Invalid response: " + response);
             }
-        } catch (RuntimeException e) {
+        } catch (ConnectionException e) {
         } catch (Exception e) {
             System.out.println("Error occurred while adding friend.");
             e.printStackTrace();
@@ -296,7 +297,7 @@ public class ServerHandler {
             } else {
                 System.out.println("Invalid response: " + response);
             }
-        } catch (RuntimeException e) {
+        } catch (ConnectionException e) {
         } catch (Exception e) {
             System.out.println("Error occurred while removing friend.");
             e.printStackTrace();
@@ -334,9 +335,9 @@ public class ServerHandler {
             System.out.println("Received: " + command + " " + args);
 
             if (command.equals("success")) {
-                // 予約情報をUserクラスに保存 
+                // 予約情報をUserクラスに保存
                 // エラー時はParseExceptionをthrow
-                User.getReservation().fromResponse(args);   
+                User.getReservation().fromResponse(args);
 
                 System.out.println("Reservation fetched successfully.");
                 isFetchSuccess = true;
@@ -348,7 +349,7 @@ public class ServerHandler {
             }
         } catch (ParseException e) {
             System.out.println("Failed to set reservation data.");
-        } catch (RuntimeException e) {
+        } catch (ConnectionException e) {
         } catch (Exception e) {
             System.out.println("Error occurred while fetching reservation.");
             e.printStackTrace();
@@ -363,7 +364,7 @@ public class ServerHandler {
      * ユーザーID、学食番号、座席番号、予約開始時間、予約終了時間を送信し、予約が成功したかどうかを返す
      * 予約成功時には、予約情報をUserクラスに保存
      * request ->
-     * "addReservation userID1,userID2,... cafeNum seatNum startTime endTime"
+     * "addReservation userID1,userID2,... cafeNum seatNum,seatNum startTime endTime"
      * response -> "success" or "failure message"
      */
     public static boolean addReservation() {
@@ -389,4 +390,11 @@ public class ServerHandler {
         return new int[0];
     }
 
+}
+
+// 接続エラー時の例外
+class ConnectionException extends RuntimeException {
+    public ConnectionException(String message) {
+        super(message);
+    }
 }
