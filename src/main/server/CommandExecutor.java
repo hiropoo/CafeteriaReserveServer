@@ -202,6 +202,14 @@ class FetchFriendExecutor implements CommandExecutor {
 
     @Override
     public void execute(PrintWriter out, String args) {
+        try {
+            System.out.println("Fetch friend executor called.");
+
+            out.println("success ABC123:user1 DEF456:user2 ");
+            System.out.println("success ABC123:user1 DEF456:user2 ");
+
+        } catch (Exception e) {
+        }
     }
 }
 
@@ -214,6 +222,13 @@ class AddFriendExecutor implements CommandExecutor {
 
     @Override
     public void execute(PrintWriter out, String args) {
+        try {
+            System.out.println("Add friend executor called.");
+
+            out.println("success DEF456:user2");
+            System.out.println("success DEF456:user2");
+        } catch (Exception e) {
+        }
     }
 }
 
@@ -226,6 +241,13 @@ class RemoveFriendExecutor implements CommandExecutor {
 
     @Override
     public void execute(PrintWriter out, String args) {
+        try {
+            System.out.println("Remove friend executor called.");
+
+            out.println("success");
+            System.out.println("removed successfully");
+        } catch (Exception e) {
+        }
     }
 }
 
@@ -239,6 +261,14 @@ class FetchReservationExecutor implements CommandExecutor {
 
     @Override
     public void execute(PrintWriter out, String args) {
+        try {
+            System.out.println("Fetch reservation executor called.");
+
+            out.println("success ABC123:user1,DEF456:user2, 1 1,2,3 2024-07-11-12:00:00 2024-07-11-12:20:00 false");
+            System.out.println(
+                    "success ABC123:user1,DEF456:user2, 1 1,2,3 2024-07-11-12:00:00 2024-07-11-12:20:00 false");
+        } catch (Exception e) {
+        }
     }
 }
 

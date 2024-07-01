@@ -2,70 +2,72 @@ package test.util;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
 public class Reservation {
     /* インスタンス変数 */
-    private static Date startTime; // 予約開始時間
-    private static Date endTime; // 予約終了時間
+    private static LocalDateTime startTime; // 予約開始時間
+    private static LocalDateTime endTime; // 予約終了時間
     private static int cafeNum; // 予約した学食の番号
     private static List<Integer> seatNums; // 予約した席の番号
     private static List<String> members; // 予約メンバー
     private static boolean isArrived; // 予約時間までに来たかどうか
     
     
-    public Date getStartTime() {
+    public static LocalDateTime getStartTime() {
         return startTime;
     }
     
-    public void setStartTime(Date date) {
+    public static void setStartTime(LocalDateTime date) {
         Reservation.startTime = date;
     }
     
-    public Date getEndTime() {
+    public static LocalDateTime getEndTime() {
         return endTime;
     }
 
-    public void setEndTime(Date endTime) {
+    public static void setEndTime(LocalDateTime endTime) {
         Reservation.endTime = endTime;
     }
 
-    public int getCafeNum() {
+    public static int getCafeNum() {
         return cafeNum;
     }
 
-    public void setCafeNum(int cafeNum) {
+    public static void setCafeNum(int cafeNum) {
         Reservation.cafeNum = cafeNum;
     }
 
-    public List<Integer> getSeatNums() {
+    public static List<Integer> getSeatNums() {
         return seatNums;
     }
 
-    public void setSeatNums(List<Integer> seatNums) {
+    public static void setSeatNums(List<Integer> seatNums) {
         Reservation.seatNums = seatNums;
     }
 
-    public boolean isArrived() {
+    public static boolean isArrived() {
         return isArrived;
     }
 
-    public void setArrived(boolean isArrived) {
+    public static void setArrived(boolean isArrived) {
         Reservation.isArrived = isArrived;
     }
 
-    public List<String> getMembers() {
+    public static List<String> getMembers() {
         return members;
     }
 
-    public void setMembers(List<String> members) {
+    public static void setMembers(List<String> members) {
         Reservation.members = members;
     }
 
     /* 予約情報をクリア */
-    public void clear() {
+    public static void clear() {
         Reservation.startTime = null;
         Reservation.endTime = null;
         Reservation.cafeNum = -1;
@@ -79,7 +81,7 @@ public class Reservation {
      * response = userID,userID,... cafeNum seatNum,seatNum,...
      * startTime endTime went
      */
-    public void fromResponse(String response) throws ParseException {
+    public static void fromResponse(String response) throws ParseException {
         String[] splitData = response.split(" ");
         List<String> members = Arrays.asList(splitData[0].split(","))
                 .stream()
@@ -93,9 +95,9 @@ public class Reservation {
                 .toList();
         boolean went = Boolean.parseBoolean(splitData[5]);
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        Date startTime = dateFormat.parse(splitData[3]);
-        Date endTime = dateFormat.parse(splitData[4]);
+        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm:ss");
+        LocalDateTime startTime = LocalDateTime.parse(splitData[3], dateFormat);
+        LocalDateTime endTime = LocalDateTime.parse(splitData[4], dateFormat);
 
         Reservation.members = members;
         Reservation.cafeNum = cafeNum;

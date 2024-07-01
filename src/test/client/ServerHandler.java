@@ -5,6 +5,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.text.ParseException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +26,8 @@ public class ServerHandler {
     private static Socket clientSocket;
     private static BufferedReader in; // サーバからの入力ストリーム
     private static PrintWriter out; // サーバへの出力ストリーム
+    // 日時のフォーマット
+    private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm:ss");    
 
     // サーバに接続するメソッド
     private static void connect() throws ConnectionException {
@@ -372,12 +376,12 @@ public class ServerHandler {
         int cafeNum = User.getReservation().getCafeNum();
         List<String> seatNums = User.getReservation().getSeatNums().stream().map(seatNum -> String.valueOf(seatNum))
                 .toList();
-        Date startTime = User.getReservation().getStartTime();
-        Date endTime = User.getReservation().getEndTime();
+        LocalDateTime startTime = User.getReservation().getStartTime();
+        LocalDateTime endTime = User.getReservation().getEndTime();
         boolean isAddSuccess = false;
 
         String request = "addReservation " + String.join(",", members) + " " + cafeNum + " "
-                + String.join(",", seatNums) + " " + startTime.getTime() + " " + endTime.getTime();
+                + String.join(",", seatNums) + " " + startTime.format(formatter) + " " + endTime.format(formatter);
         String response = "";
 
         System.out.println("Adding reservation");
