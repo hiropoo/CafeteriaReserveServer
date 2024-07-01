@@ -7,11 +7,11 @@ import java.net.Socket;
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import properties.PropertyUtil;
+import test.util.Reservation;
 import test.util.User;
 
 /*
@@ -19,15 +19,15 @@ import test.util.User;
  * クライアントがサーバにリクエストを送信したり、サーバからのレスポンスを受け取るためのハンドラ
  */
 public class ServerHandler {
+    /* クラス変数 */
     static final String SERVER_IP = PropertyUtil.getProperty("ip"); // サーバーのIPアドレス
     static final int PORT = Integer.parseInt(PropertyUtil.getProperty("port")); // サーバーのポート番号
-
-    /* インスタンス変数 */
     private static Socket clientSocket;
     private static BufferedReader in; // サーバからの入力ストリーム
     private static PrintWriter out; // サーバへの出力ストリーム
     // 日時のフォーマット
-    private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm:ss");    
+    private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm:ss");
+    /* --- クラス変数ここまで --- */
 
     // サーバに接続するメソッド
     private static void connect() throws ConnectionException {
@@ -43,6 +43,27 @@ public class ServerHandler {
             throw new ConnectionException("Failed to connect to the server.");
         }
     }
+
+    // 接続エラー時の例外
+    private static class ConnectionException extends RuntimeException {
+        public ConnectionException(String message) {
+            super(message);
+        }
+    }
+
+    // サーバとの接続を切断するメソッド
+    private static void disconnect() {
+        try {
+            if (clientSocket != null) {
+                clientSocket.close();
+            }
+        } catch (Exception e) {
+            System.out.println("Failed to close the client socket.");
+        }
+        System.out.println();
+    }
+
+    /* ----- サーバとの通信 API ----- */
 
     /*
      * ユーザ情報を送信し、新規登録が成功したかどうかを返す
@@ -249,17 +270,6 @@ public class ServerHandler {
         return isAddSuccess;
     }
 
-    private static void disconnect() {
-        try {
-            if (clientSocket != null) {
-                clientSocket.close();
-            }
-        } catch (Exception e) {
-            System.out.println("Failed to close the client socket.");
-        }
-        System.out.println();
-    }
-
     /*
      * ユーザーIDと友達のユーザーIDを送信し、友達削除が成功したかどうかを返す
      * 成功時には、友達のユーザーIDとユーザー名をUserクラスから削除
@@ -341,7 +351,7 @@ public class ServerHandler {
             if (command.equals("success")) {
                 // 予約情報をUserクラスに保存
                 // エラー時はParseExceptionをthrow
-                User.getReservation().fromResponse(args);
+                Reservation.fromResponse(args);
 
                 System.out.println("Reservation fetched successfully.");
                 isFetchSuccess = true;
@@ -372,12 +382,12 @@ public class ServerHandler {
      * response -> "success" or "failure message"
      */
     public static boolean addReservation() {
-        List<String> members = User.getReservation().getMembers();
-        int cafeNum = User.getReservation().getCafeNum();
-        List<String> seatNums = User.getReservation().getSeatNums().stream().map(seatNum -> String.valueOf(seatNum))
+        List<String> members = Reservation.getMembers();
+        int cafeNum = Reservation.getCafeNum();
+        List<String> seatNums = Reservation.getSeatNums().stream().map(seatNum -> String.valueOf(seatNum))
                 .toList();
-        LocalDateTime startTime = User.getReservation().getStartTime();
-        LocalDateTime endTime = User.getReservation().getEndTime();
+        LocalDateTime startTime = Reservation.getStartTime();
+        LocalDateTime endTime = Reservation.getEndTime();
         boolean isAddSuccess = false;
 
         String request = "addReservation " + String.join(",", members) + " " + cafeNum + " "
@@ -399,13 +409,13 @@ public class ServerHandler {
 
             if (command.equals("success")) {
                 // 予約情報をUserクラスに保存
-                User.getReservation().setArrived(false);
+                Reservation.setArrived(false);
 
                 System.out.println("Reservation added successfully.");
                 isAddSuccess = true;
             } else if (command.equals("failure")) {
                 System.out.println("Failed to add reservation.");
-                User.getReservation().clear();
+                Reservation.clear();
                 System.out.println("Cleared reservation data.");
                 System.out.println("Response: " + args);
             } else {
@@ -430,7 +440,7 @@ public class ServerHandler {
      * response -> "success" or "failure message"
      */
     public static boolean removeReservation() {
-        List<String> members = User.getReservation().getMembers();
+        List<String> members = Reservation.getMembers();
         boolean isRemoveSuccess = false;
         String request = "removeReservation " + String.join(",", members);
         String response = "";
@@ -450,7 +460,7 @@ public class ServerHandler {
 
             if (command.equals("success")) {
                 // 予約情報をUserクラスから削除
-                User.getReservation().clear();
+                Reservation.clear();
 
                 System.out.println("Reservation removed successfully.");
                 isRemoveSuccess = true;
@@ -476,9 +486,10 @@ public class ServerHandler {
      * request -> "fetchAvailableSeats startTime endTime"
      * response -> "success seatNum1,seatNum2,seatNum3..." or "failure message"
      */
-    public static List<Integer> fetchAvailableSeats(int cafeNum, Date startTime, Date endTime) {
+    public static List<Integer> fetchAvailableSeats(int cafeNum, LocalDateTime startTime, LocalDateTime endTime) {
         List<Integer> availableSeats = new java.util.ArrayList<>();
-        String request = "fetchAvailableSeats " + cafeNum + " " + startTime.getTime() + " " + endTime.getTime();
+        String request = "fetchAvailableSeats " + cafeNum + " " + startTime.format(formatter) + " "
+                + endTime.format(formatter);
         String response = "";
 
         System.out.println("Fetching available seats");
@@ -514,11 +525,4 @@ public class ServerHandler {
         return availableSeats;
     }
 
-}
-
-// 接続エラー時の例外
-class ConnectionException extends RuntimeException {
-    public ConnectionException(String message) {
-        super(message);
-    }
 }
