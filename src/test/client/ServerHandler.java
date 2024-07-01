@@ -368,7 +368,55 @@ public class ServerHandler {
      * response -> "success" or "failure message"
      */
     public static boolean addReservation() {
-        return false;
+        List<String> members = User.getReservation().getMembers();
+        int cafeNum = User.getReservation().getCafeNum();
+        List<String> seatNums = User.getReservation().getSeatNums().stream().map(seatNum -> String.valueOf(seatNum))
+                .toList();
+        Date startTime = User.getReservation().getStartTime();
+        Date endTime = User.getReservation().getEndTime();
+        boolean isAddSuccess = false;
+
+        String request = "addReservation " + String.join(",", members) + " " + cafeNum + " "
+                + String.join(",", seatNums) + " " + startTime.getTime() + " " + endTime.getTime();
+        String response = "";
+
+        System.out.println("Adding reservation");
+
+        try {
+            connect();
+
+            out.println(request);
+            System.out.println("Sent: " + request);
+
+            response = in.readLine();
+            String command = response.split(" ", 2)[0];
+            String args = response.split(" ", 2).length > 1 ? response.split(" ", 2)[1] : "";
+            System.out.println("Received: " + command + " " + args);
+
+            if (command.equals("success")) {
+                // 予約情報をUserクラスに保存
+                User.getReservation().setArrived(false);
+
+                System.out.println("Reservation added successfully.");
+                isAddSuccess = true;
+            } else if (command.equals("failure")) {
+                System.out.println("Failed to add reservation.");
+                User.getReservation().clear();
+                System.out.println("Cleared reservation data.");
+                System.out.println("Response: " + args);
+            } else {
+                System.out.println("Invalid response: " + response);
+            }
+
+        } catch (ConnectionException e) {
+        } catch (Exception e) {
+            System.out.println("Error occurred while adding reservation.");
+            e.printStackTrace();
+        } finally {
+            disconnect();
+        }
+
+        return isAddSuccess;
     }
 
     /*
@@ -378,7 +426,45 @@ public class ServerHandler {
      * response -> "success" or "failure message"
      */
     public static boolean removeReservation() {
-        return false;
+        List<String> members = User.getReservation().getMembers();
+        boolean isRemoveSuccess = false;
+        String request = "removeReservation " + String.join(",", members);
+        String response = "";
+
+        System.out.println("Removing reservation");
+
+        try {
+            connect();
+
+            out.println(request);
+            System.out.println("Sent: " + request);
+
+            response = in.readLine();
+            String command = response.split(" ", 2)[0];
+            String args = response.split(" ", 2).length > 1 ? response.split(" ", 2)[1] : "";
+            System.out.println("Received: " + command + " " + args);
+
+            if (command.equals("success")) {
+                // 予約情報をUserクラスから削除
+                User.getReservation().clear();
+
+                System.out.println("Reservation removed successfully.");
+                isRemoveSuccess = true;
+            } else if (command.equals("failure")) {
+                System.out.println("Failed to remove reservation.");
+                System.out.println("Response: " + args);
+            } else {
+                System.out.println("Invalid response: " + response);
+            }
+        } catch (ConnectionException e) {
+        } catch (Exception e) {
+            System.out.println("Error occurred while removing reservation.");
+            e.printStackTrace();
+        } finally {
+            disconnect();
+        }
+
+        return isRemoveSuccess;
     }
 
     /*
@@ -386,8 +472,42 @@ public class ServerHandler {
      * request -> "fetchAvailableSeats startTime endTime"
      * response -> "success seatNum1,seatNum2,seatNum3..." or "failure message"
      */
-    public static int[] fetchAvailableSeats(int cafeNum, Date startTime, Date endTime) {
-        return new int[0];
+    public static List<Integer> fetchAvailableSeats(int cafeNum, Date startTime, Date endTime) {
+        List<Integer> availableSeats = new java.util.ArrayList<>();
+        String request = "fetchAvailableSeats " + cafeNum + " " + startTime.getTime() + " " + endTime.getTime();
+        String response = "";
+
+        System.out.println("Fetching available seats");
+
+        try {
+            connect();
+
+            out.println(request);
+            System.out.println("Sent: " + request);
+
+            response = in.readLine();
+            String command = response.split(" ", 2)[0];
+            String args = response.split(" ", 2).length > 1 ? response.split(" ", 2)[1] : "";
+            System.out.println("Received: " + command + " " + args);
+
+            if (command.equals("success")) {
+                availableSeats = List.of(args.split(",")).stream().map(seatNum -> Integer.parseInt(seatNum)).toList();
+                System.out.println("Available seats fetched successfully.");
+            } else if (command.equals("failure")) {
+                System.out.println("Failed to fetch available seats.");
+                System.out.println("Response: " + args);
+            } else {
+                System.out.println("Invalid response: " + response);
+            }
+        } catch (ConnectionException e) {
+        } catch (Exception e) {
+            System.out.println("Error occurred while fetching available seats.");
+            e.printStackTrace();
+        } finally {
+            disconnect();
+        }
+
+        return availableSeats;
     }
 
 }
