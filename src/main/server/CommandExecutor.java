@@ -206,7 +206,7 @@ class FetchFriendExecutor implements CommandExecutor {
             System.out.println("Fetch friend executor called.");
 
             out.println("success ABC123:user1 DEF456:user2 ");
-            System.out.println("success ABC123:user1 DEF456:user2 ");
+            System.out.println("fetched friend list successfully");
 
         } catch (Exception e) {
         }
@@ -226,7 +226,7 @@ class AddFriendExecutor implements CommandExecutor {
             System.out.println("Add friend executor called.");
 
             out.println("success DEF456:user2");
-            System.out.println("success DEF456:user2");
+            System.out.println("added friend successfully");
         } catch (Exception e) {
         }
     }
@@ -245,7 +245,7 @@ class RemoveFriendExecutor implements CommandExecutor {
             System.out.println("Remove friend executor called.");
 
             out.println("success");
-            System.out.println("removed successfully");
+            System.out.println("removed friend successfully");
         } catch (Exception e) {
         }
     }
@@ -282,6 +282,13 @@ class AddReservationExecutor implements CommandExecutor {
 
     @Override
     public void execute(PrintWriter out, String args) {
+        try {
+            System.out.println("Add reservation executor called.");
+
+            out.println("success");
+            System.out.println("added reservation successfully");
+        } catch (Exception e) {
+        }
     }
 }
 
@@ -294,6 +301,13 @@ class RemoveReservationExecutor implements CommandExecutor {
 
     @Override
     public void execute(PrintWriter out, String args) {
+        try {
+            System.out.println("Remove reservation executor called.");
+
+            out.println("success");
+            System.out.println("removed reservation successfully");
+        } catch (Exception e) {
+        }
     }
 }
 
@@ -306,6 +320,13 @@ class FetchAvailableSeatsExecutor implements CommandExecutor {
 
     @Override
     public void execute(PrintWriter out, String args) {
+        try {
+            System.out.println("Fetch available seats executor called.");
+
+            out.println("success 1,2,3");
+            System.out.println("fetched available seats successfully");
+        } catch (Exception e) {
+        }
     }
 }
 
@@ -318,5 +339,12 @@ class UpdateArrivedExecutor implements CommandExecutor {
 
     @Override
     public void execute(PrintWriter out, String args) {
+        try {
+            System.out.println("Update arrived executor called.");
+
+            out.println("success");
+            System.out.println("updated arrived successfully");
+        } catch (Exception e) {
+        }
     }
 }
