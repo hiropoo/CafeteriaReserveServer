@@ -6,6 +6,9 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -431,9 +434,67 @@ class RemoveFriendExecutor implements CommandExecutor {
  * "success userID:userName,userID:userName,... cafeNum seatNum startTime endTime went"
  */
 class FetchReservationExecutor implements CommandExecutor {
-    
+    static final String SELECT_RESERVATION_QUERY = "SELECT * FROM reservations WHERE FIND_IN_SET(?, user_id) > 0";
+
     @Override
     public void execute(PrintWriter out, String args) {
+        System.out.println("Fetch reservation executor called.");
+
+        String userID= args;
+
+        Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");    //ユーザーIDが半角英数字以外の文字を含むかをチェック
+        Matcher userIDMatcher = pattern.matcher(userID);
+        if (userIDMatcher.find()) {
+            out.println("failure UserID should contain only alphanumeric characters.");
+            return;
+        }
+
+        Connection connection = null;
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+        try{
+            connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);     //データベースに接続
+            System.out.println("Connected to DB.");
+
+            statement = connection.prepareStatement(SELECT_RESERVATION_QUERY);
+            statement.setString(1, userID);     //このユーザが含まれるデータを探す
+            resultSet = statement.executeQuery();
+
+            String reservationInfo = "";
+            if (resultSet.next()) {
+                //Stringに変換しつつ予約の情報をすべて取得
+                reservationInfo = resultSet.getString("user_id") +" "+ Integer.toString(resultSet.getInt("cafe_num")) +" "
+                                 + Integer.toString(resultSet.getInt("seat_num"))+" "+ resultSet.getTimestamp("start_time").toString() 
+                                 +" "+ resultSet.getTimestamp("end_time").toString() +" "+ resultSet.getBoolean("arrived");
+
+                out.println("success " + reservationInfo);
+                System.out.println("success " + reservationInfo + " fetched successfully");
+            }else {
+                out.println("success ");
+                System.out.println("success This user has no reservations currently.");      /*エラーと予約無しを区別できない*/
+            }
+        } catch (SQLException e) {
+            out.println("failure Failed to fetch reservations.");
+            System.out.println("failure Failed to fetch reservations.");
+            e.printStackTrace();
+        } finally {
+            try {
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+                if (statement != null) {
+                    statement.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                out.println("failure Failed to close connection.");
+                System.out.println("failure Failed to close connection.");
+                e.printStackTrace();
+            }
+            System.out.println();
+        }
     }
 }
 
@@ -444,9 +505,84 @@ class FetchReservationExecutor implements CommandExecutor {
  * response -> "success" or "failure message"
  */
 class AddReservationExecutor implements CommandExecutor {
+    static final String ADD_RESERVATION_QUERY = "INSERT INTO reservations (user_id, cafe_num, seat_num, start_time, end_time, arrived) VALUES (?, ?, ?, ? , ?, ?)";
+    static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        /*予約あるなら拒否するようにするべきかどうか*/
 
     @Override
     public void execute(PrintWriter out, String args) {
+        System.out.println("Add reservation executor called.");
+
+        String userID = args.split(" ")[0];    //引数をスペースで分割し、ユーザーIDと追加する予約の情報を取得
+        int cafeNum = Integer.parseInt(args.split(" ")[1]);
+        int seatNum = Integer.parseInt(args.split(" ")[2]);
+        Timestamp startTime = Timestamp.valueOf(LocalDateTime.parse(args.split(" ")[3] +" "+ args.split(" ")[4], formatter));
+        Timestamp endTime = Timestamp.valueOf(LocalDateTime.parse(args.split(" ")[5] +" "+ args.split(" ")[6], formatter));;
+        boolean arrived = false;
+
+        String userIDWithoutComma= userID.replace(",", "");
+        Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");    //ユーザーIDが半角英数字以外の文字を含むかをチェック
+        Matcher userIDMatcher = pattern.matcher(userIDWithoutComma);
+        if (userIDMatcher.find()) {
+            out.println("failure UserID should contain only alphanumeric characters.");
+            return;
+        }
+
+        Connection connection = null;
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+        try {
+            connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);     //データベースに接続
+            System.out.println("Connected to DB.");
+
+            statement = connection.prepareStatement(ADD_RESERVATION_QUERY);   //この予約をreservationsテーブルに追加
+            statement.setString(1, userID);
+            statement.setInt(2, cafeNum);
+            statement.setInt(3, seatNum);
+            statement.setTimestamp(4, startTime);
+            statement.setTimestamp(5, endTime);
+            statement.setBoolean(6, arrived);
+            statement.executeUpdate();
+
+            statement = connection.prepareStatement("SELECT * FROM reservations WHERE user_id = ?");
+            statement.setString(1, userID);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                String reservationUser= resultSet.getString("user_id");   //データの記録に成功したかを確認
+                Timestamp reservationTime= resultSet.getTimestamp("start_time");
+                if(reservationUser.equals(userID) && reservationTime.equals(startTime)){
+                    out.println("success ");   /* */
+                    System.out.println("success Added reservation successfully."); 
+                }else {
+                    out.println("failure Failed to add reservation.");
+                    System.out.println("failure Failed to add reservation.");
+                }
+            } else {
+                out.println("failure Failed to add reservation.");
+                System.out.println("failure Failed to add reservation.");
+            }
+        } catch (SQLException e) {
+            out.println("failure Failed to add reservation.");
+            System.out.println("failure Failed to add reservation.");
+            e.printStackTrace();
+        } finally {
+            try {
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+                if (statement != null) {
+                    statement.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                out.println("failure Failed to close connection.");   
+                System.out.println("failure Failed to close connection.");
+                e.printStackTrace();
+            }
+            System.out.println();
+        }
     }
 }
 
@@ -456,9 +592,58 @@ class AddReservationExecutor implements CommandExecutor {
  * response -> "success" or "failure message"
  */
 class RemoveReservationExecutor implements CommandExecutor {
+    static final String REMOVE_RESERVATION_QUERY = "DELETE FROM reservations WHERE user_id = ?";
 
     @Override
     public void execute(PrintWriter out, String args) {
+        System.out.println("Remove reservation executor called.");
+    
+        String userID = args;
+    
+        String userIDWithoutComma= userID.replace(",", "");
+        Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");    //ユーザーIDが半角英数字以外の文字を含むかをチェック
+        Matcher userIDMatcher = pattern.matcher(userIDWithoutComma);
+        if (userIDMatcher.find()) {
+            out.println("failure UserID should contain only alphanumeric characters.");
+            return;
+        }
+    
+        Connection connection = null;
+        PreparedStatement statement = null;
+        try {
+            connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);     //データベースに接続
+            System.out.println("Connected to DB.");
+    
+            statement = connection.prepareStatement(REMOVE_RESERVATION_QUERY);
+            statement.setString(1, userID);
+            int rowsAffected = statement.executeUpdate();   //予約を削除
+    
+            if (rowsAffected > 0) {
+                out.println("success ");
+                System.out.println("success Removed reservation successfully.");
+            } else {
+                out.println("failure Failed to remove reservations.");
+                System.out.println("failure Failed to remove reservations."); 
+            }
+        } catch (SQLException e) {
+            out.println("failure Failed to remove reservations.");
+            System.out.println("failure Failed to remove reservations."); 
+            e.printStackTrace();
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                out.println("failure Failed to close connection.");
+                System.out.println("failure Failed to close connection.");
+                e.printStackTrace();
+            }
+            System.out.println();
+        }
     }
 }
 
