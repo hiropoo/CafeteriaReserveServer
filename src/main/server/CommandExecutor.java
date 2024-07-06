@@ -10,6 +10,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -250,7 +251,7 @@ class FetchFriendExecutor implements CommandExecutor {
                     friendList= friendList + ":" + friendName;       //friendListに友達のユーザ名を追加
                 } while (resultSet.next());
                 out.println("success" + friendList);
-                System.out.println("FriendList:" + friendList + " fetched successfully");
+                System.out.println("FriendList:'" + friendList + "' fetched successfully");
             }else {
                 out.println("success "); 
                 System.out.println("success This user has no friends currently.");      /*エラーと友達いないのを区別できない*/
@@ -492,7 +493,7 @@ class FetchReservationExecutor implements CommandExecutor {
                                  +" "+ localEndTime.format(formatter) +" "+ resultSet.getBoolean("arrived");
 
                 out.println("success " + reservationInfo);
-                System.out.println("success " + reservationInfo + " fetched successfully");
+                System.out.println("success '" + reservationInfo + "' fetched successfully");
             }else {
                 out.println("success ");
                 System.out.println("success This user has no reservations currently.");      /*エラーと予約無しを区別できない*/
@@ -547,8 +548,8 @@ class AddReservationExecutor implements CommandExecutor {
         System.out.println("Add reservation executor called.");
 
         int membersNum= args.split(" ")[0].split(",").length;      //予約人数を取得
-        ArrayList<String> userIDs= new ArrayList<String>();
-        ArrayList<Integer> seatNums= new ArrayList<Integer>();
+        List<String> userIDs= new ArrayList<>();
+        List<Integer> seatNums= new ArrayList<>();
 
         for(int i=0; i< membersNum; i++){       //メンバ全員のユーザIDと席番号を配列に追加
             userIDs.add(args.split(" ")[0].split(",")[i]);
@@ -672,7 +673,7 @@ class RemoveReservationExecutor implements CommandExecutor {
         System.out.println("Remove reservation executor called.");
 
         int membersNum= args.split(",").length;      //キャンセルする人数を取得
-        ArrayList<String> userIDs= new ArrayList<String>();
+        List<String> userIDs= new ArrayList<>();
 
         for(int i=0; i< membersNum; i++){       //メンバ全員のユーザIDを配列に追加
             userIDs.add(args.split(" ")[0].split(",")[i]);
@@ -733,9 +734,83 @@ class RemoveReservationExecutor implements CommandExecutor {
  * response -> "success seatNum1,seatNum2,..." or "failure message"
  */
 class FetchAvailableSeatsExecutor implements CommandExecutor {
+    static final String SELECT_RESERVATION_QUERY = "SELECT * FROM reservations WHERE cafe_num = ? AND start_time = ?";
+    static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm:ss");
+    static final int MAX_SEATS_1 = 30, MAX_SEATS_2 = 30;    //第一、第二食堂の最大座席数
 
     @Override
     public void execute(PrintWriter out, String args) {
+        System.out.println("Fetch Available seats executor called.");
+
+        int cafeNum = Integer.parseInt(args.split(" ")[0]);     //引数から食堂と時間を取得
+        LocalDateTime startTime = LocalDateTime.parse(args.split(" ")[1], formatter);
+
+        String filteredArgs= args.replaceAll("[" + "," + " " + "-" + ":" + "]", "");
+        Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");    //必要な特殊文字を取り除いた引数が半角英数字以外の文字を含むかをチェック
+        Matcher argsMatcher = pattern.matcher(filteredArgs);
+        if (argsMatcher.find()) {
+            out.println("failure Requests should contain only alphanumeric characters.");
+            return;
+        }
+
+        Connection connection = null;
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+        try{
+            connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+            System.out.println("Connected to DB.");
+
+            List<Integer> availableSeats = new ArrayList<>();     //空席を保存する配列を初期化
+            if(cafeNum == 1){
+                for (int i=1; i <= MAX_SEATS_1; i++){
+                    availableSeats.add(i);
+                }
+            } else if (cafeNum == 2){
+                for (int i=1; i <= MAX_SEATS_2; i++){       /*最大席数が同じなら削除 */
+                    availableSeats.add(i);
+                }
+            }
+            
+            statement = connection.prepareStatement(SELECT_RESERVATION_QUERY);
+            statement.setInt(1, cafeNum);     //指定された食堂・時間の予約を探す
+            statement.setTimestamp(2, Timestamp.valueOf(startTime));
+            resultSet = statement.executeQuery();
+            
+            while (resultSet.next()) {                
+                availableSeats.remove(Integer.valueOf(resultSet.getInt("seat_num")));
+            }
+            
+            String availableSeat = "";
+            for (int i=0; i<availableSeats.size(); i++) {
+                if(i > 0) {
+                    availableSeat = availableSeat + ",";
+                }
+                availableSeat = availableSeat + availableSeats.get(i).toString();
+            }
+            out.println("success " + availableSeat);
+            System.out.println("success '" + availableSeat + "' fetched successfully.");
+        } catch (SQLException e) {
+            out.println("failure Failed to fetch available seats.");
+            System.out.println("failure Failed to fetch available seats.");
+            e.printStackTrace();
+        } finally {
+            try {
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+                if (statement != null) {
+                    statement.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                out.println("failure Failed to close connection.");
+                System.out.println("failure Failed to close connection.");
+                e.printStackTrace();
+            }
+            System.out.println();
+        }
     }
 }
 
@@ -745,8 +820,58 @@ class FetchAvailableSeatsExecutor implements CommandExecutor {
  * response -> "success" or "failure message"
  */
 class UpdateArrivedExecutor implements CommandExecutor {
+    static final String UPDATE_ARRIVED_QUERY = "UPDATE reservations SET arrived = ? WHERE user_id = ?";
 
     @Override
-    public void execute(PrintWriter out, String args) {
+    public void execute(PrintWriter out, String args) {        
+        System.out.println("Fetch Update arrival executor called.");
+
+        String userID = args.split(" ")[0];
+        
+        Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");    //スペースを取り除いた引数が半角英数字以外の文字を含むかをチェック
+        Matcher argsMatcher = pattern.matcher(args.replace(" ", ""));
+        if (argsMatcher.find()) {
+            out.println("failure Requests should contain only alphanumeric characters.");
+            return;
+        }
+
+        Connection connection = null;
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+        try{
+            connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+            System.out.println("Connected to DB.");
+
+            statement = connection.prepareStatement(UPDATE_ARRIVED_QUERY);
+            statement.setBoolean(1, true);     //指定された食堂・時間の予約を探す
+            statement.setString(2, userID);
+            int rowsUpdated = statement.executeUpdate();
+            
+            if(rowsUpdated > 0){
+                out.println("success ");
+                System.out.println("success Updated 'arrived' successfully.");
+            }
+        } catch (SQLException e) {
+            out.println("failure Failed to update arrived.");
+            System.out.println("failure Failed to update 'arrived'.");
+            e.printStackTrace();
+        } finally {
+            try {
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+                if (statement != null) {
+                    statement.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                out.println("failure Failed to close connection.");
+                System.out.println("failure Failed to close connection.");
+                e.printStackTrace();
+            }
+            System.out.println();
+        }
     }
 }
