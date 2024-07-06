@@ -392,11 +392,10 @@ class RemoveFriendExecutor implements CommandExecutor {
             statement.setString(2, friendID);
             statement.setString(3, friendID);
             statement.setString(4, userID);
-
             int rowsAffected = statement.executeUpdate(); //このフレンド関係を削除する
 
             if (rowsAffected > 0) {
-                out.println("success Friend removed successfully.");
+                out.println("success ");
                 System.out.println("success Friend removed successfully.");
             } else {
                 out.println("failure Failed to remove friend.");
@@ -478,7 +477,7 @@ class FetchReservationExecutor implements CommandExecutor {
                     userInfoResultSet = statement.executeQuery();
                     userInfoResultSet.next();
 
-                    if(!membersResultSet.getString("user_id").equals(userID)){    //リクエストを送信したユーザでない時のみ追加
+                    if(!membersResultSet.getString("user_id").equals(userID)){    //二重に追加しないように、リクエストを送信したユーザでない時のみ追加
                         reservationInfo = reservationInfo + "," + membersResultSet.getString("user_id") + ":" + userInfoResultSet.getString("username");
                         membersSeatNums = membersSeatNums + "," + membersResultSet.getString("seat_num");
                     }
@@ -534,9 +533,13 @@ class FetchReservationExecutor implements CommandExecutor {
  * request ->
  * "addReservation userID1,userID2,... cafeNum seatNum startTime endTime"
  * response -> "success" or "failure message"
+ * 既に予約がある時 -> "failure userID:username seatNum"
  */
 class AddReservationExecutor implements CommandExecutor {
     static final String ADD_RESERVATION_QUERY = "INSERT INTO reservations (user_id, reservation_id, cafe_num, seat_num, start_time, end_time, arrived) VALUES (?, ?, ?, ?, ? , ?, ?)";
+    static final String SELECT_RESERVATION_QUERY = "SELECT * FROM reservations WHERE user_id = ?";
+    static final String SELECT_USER_QUERY = "SELECT * FROM users WHERE user_id = ?";
+    static final String REMOVE_RESERVATION_QUERY = "DELETE FROM reservations WHERE user_id = ?";
     static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm:ss");
 
     @Override
@@ -567,10 +570,34 @@ class AddReservationExecutor implements CommandExecutor {
 
         Connection connection = null;
         PreparedStatement statement = null;
-        ResultSet resultSet = null;
+        ResultSet resultSet = null, userResult = null;
         try {
             connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);     //データベースに接続
             System.out.println("Connected to DB.");
+
+            for(int i=0; i< membersNum; i++){       //メンバの内、一人でも予約やペナルティが無いかを確認
+                statement = connection.prepareStatement(SELECT_RESERVATION_QUERY);
+                statement.setString(1, userIDs.get(i));    //メンバのユーザIDでの予約を探す
+                resultSet = statement.executeQuery();
+
+                if(resultSet.next()){
+                    LocalDateTime currentTime = LocalDateTime.now();       //過去の予約かどうかを判別
+                    if(resultSet.getTimestamp("end_time").toLocalDateTime().isAfter(currentTime)){
+                        statement = connection.prepareStatement(SELECT_USER_QUERY);     //未来の予約ならこの予約を拒否
+                        statement.setString(1, userIDs.get(i));
+                        userResult = statement.executeQuery();
+                        userResult.next();
+
+                        out.println("failure "+ userIDs.get(i) +":"+ userResult.getString("username") +" "+ resultSet.getInt("seat_num"));
+                        System.out.println("failure "+ userIDs.get(i) +":"+ userResult.getString("username") +" already has a reservation.");
+                        return;
+                    } else {
+                        statement = connection.prepareStatement(REMOVE_RESERVATION_QUERY);     //過去の予約なら予約を削除
+                        statement.setString(1, userIDs.get(i));
+                        statement.executeUpdate();
+                    }
+                }
+            }
 
             for(int i=0; i< membersNum; i++){       //メンバごとにreservationsテーブルに予約を保存
                 statement = connection.prepareStatement(ADD_RESERVATION_QUERY);
@@ -613,6 +640,9 @@ class AddReservationExecutor implements CommandExecutor {
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                if (userResult != null) {
+                    userResult.close();
+                }
                 if (statement != null) {
                     statement.close();
                 }
@@ -635,7 +665,7 @@ class AddReservationExecutor implements CommandExecutor {
  * response -> "success" or "failure message"
  */
 class RemoveReservationExecutor implements CommandExecutor {
-    String REMOVE_RESERVATION_QUERY = "DELETE FROM reservations WHERE user_id = ?"; // Query to delete reservations
+    String REMOVE_RESERVATION_QUERY = "DELETE FROM reservations WHERE user_id = ?";
         
     @Override
     public void execute(PrintWriter out, String args) {
