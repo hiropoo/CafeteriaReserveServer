@@ -6,8 +6,13 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import properties.PropertyUtil;
 
@@ -26,6 +31,17 @@ public class Server {
     public static void main(String[] args) throws IOException {
         serverSocket = new ServerSocket(PORT); // サーバーソケットの作成
         System.out.println("Server is running...\n");
+
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        Runnable task = new Runnable() {
+            @Override
+            public void run() {
+                UpdateArrivedExecutor.checkArrival();
+            }
+        };
+        long initialDelay = calculateInitialDelay();
+        long period = 20;   //実行間隔
+        scheduler.scheduleAtFixedRate(task, initialDelay, period, TimeUnit.MINUTES); //定期的にtaskを実行
 
         try {
             while (true) {
@@ -80,5 +96,19 @@ public class Server {
             }
             System.out.println();
         }
+    }
+
+    private static long calculateInitialDelay() {   //次の実行時間までの分数を返すメソッド
+        LocalDateTime now = LocalDateTime.now();
+        int minute = now.getMinute();
+
+        int nextRunMinute = ((minute / 20) * 20 + 6) % 60;
+        if (minute >= nextRunMinute) {
+            nextRunMinute += 20;
+        }
+
+        LocalDateTime nextRunTime = now.truncatedTo(ChronoUnit.HOURS).plusMinutes(nextRunMinute);
+        long delay = ChronoUnit.MINUTES.between(now, nextRunTime);
+        return delay;
     }
 }
