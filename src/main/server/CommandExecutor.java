@@ -213,10 +213,11 @@ class FetchFriendExecutor implements CommandExecutor {
 
         String thisUserID= args;
 
-        Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");    //ユーザーIDが半角英数字以外の文字を含むかをチェック
-        Matcher userIDMatcher = pattern.matcher(thisUserID);
-        if (userIDMatcher.find()) {
-            out.println("failure Requests should contain only alphanumeric characters."); 
+        String filteredArgs= args.replaceAll("[" + "-" + "_" + "]", "");
+        Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");    //必要な特殊文字を取り除いた引数が半角英数字以外の文字を含むかをチェック
+        Matcher argsMatcher = pattern.matcher(filteredArgs);
+        if (argsMatcher.find()) {
+            out.println("failure Requests should contain only alphanumeric characters.");
             return;
         }
 
@@ -300,8 +301,9 @@ class AddFriendExecutor implements CommandExecutor {
         String userID = args.split(" ")[0];    //引数をスペースで分割し、ユーザーIDと追加する友達のIDを取得
         String friendID = args.split(" ")[1];
 
-        Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");    //引数が半角英数字以外の文字を含むかをチェック
-        Matcher argsMatcher = pattern.matcher(args.replace(" ", ""));
+        String filteredArgs= args.replaceAll("[" + " " + "-" + "_" + "]", "");
+        Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");    //必要な特殊文字を取り除いた引数が半角英数字以外の文字を含むかをチェック
+        Matcher argsMatcher = pattern.matcher(filteredArgs);
         if (argsMatcher.find()) {
             out.println("failure Requests should contain only alphanumeric characters.");
             return;
@@ -374,11 +376,11 @@ class RemoveFriendExecutor implements CommandExecutor {
         String userID = args.split(" ")[0];     //argsからユーザIDとフレンドIDを得る
         String friendID = args.split(" ")[1];
 
-        Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");    //ユーザーIDが半角英数字以外の文字を含むかをチェック
-        Matcher userIDMatcher = pattern.matcher(userID);
-        Matcher friendIDMatcher = pattern.matcher(friendID);
-        if (userIDMatcher.find() || friendIDMatcher.find()) {
-            out.println("failure UserID and friendID should contain only alphanumeric characters."); 
+        String filteredArgs= args.replaceAll("[" + " " + "-" + "_" + "]", "");
+        Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");    //必要な特殊文字を取り除いた引数が半角英数字以外の文字を含むかをチェック
+        Matcher argsMatcher = pattern.matcher(filteredArgs);
+        if (argsMatcher.find()) {
+            out.println("failure Requests should contain only alphanumeric characters.");
             return;
         }
 
@@ -442,10 +444,11 @@ class FetchReservationExecutor implements CommandExecutor {
 
         String userID= args;
 
-        Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");    //ユーザーIDが半角英数字以外の文字を含むかをチェック
-        Matcher userIDMatcher = pattern.matcher(userID);
-        if (userIDMatcher.find()) {
-            out.println("failure UserID should contain only alphanumeric characters.");
+        String filteredArgs= args.replaceAll("[" + "-" + "_" + "]", "");
+        Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");    //必要な特殊文字を取り除いた引数が半角英数字以外の文字を含むかをチェック
+        Matcher argsMatcher = pattern.matcher(filteredArgs);
+        if (argsMatcher.find()) {
+            out.println("failure Requests should contain only alphanumeric characters.");
             return;
         }
 
@@ -546,6 +549,7 @@ class FetchReservationExecutor implements CommandExecutor {
 class AddReservationExecutor implements CommandExecutor {
     static final String ADD_RESERVATION_QUERY = "INSERT INTO reservations (user_id, reservation_id, cafe_num, seat_num, start_time, end_time, arrived) VALUES (?, ?, ?, ?, ? , ?, ?)";
     static final String SELECT_RESERVATION_QUERY = "SELECT * FROM reservations WHERE user_id = ?";
+    static final String CHECK_AVAILABLE_QUERY = "SELECT * FROM reservations WHERE cafe_num = ? AND seat_num = ?";
     static final String SELECT_USER_QUERY = "SELECT * FROM users WHERE user_id = ?";
     static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm:ss");
 
@@ -567,7 +571,7 @@ class AddReservationExecutor implements CommandExecutor {
         LocalDateTime endTime = LocalDateTime.parse(args.split(" ")[4], formatter);
         boolean arrived = false;
 
-        String filteredArgs= args.replaceAll("[" + "," + " " + "-" + ":" + "]", "");
+        String filteredArgs= args.replaceAll("[" + "," + " " + "-" + "_" + ":" + "]", "");
         Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");    //必要な特殊文字を取り除いた引数が半角英数字以外の文字を含むかをチェック
         Matcher argsMatcher = pattern.matcher(filteredArgs);
         if (argsMatcher.find()) {
@@ -601,6 +605,18 @@ class AddReservationExecutor implements CommandExecutor {
                     } else {
                         FetchReservationHistoryExecutor.exportToHistory(resultSet, connection, out);     //過去の予約なら履歴テーブルに移動させ、現在の予約を続行
                     }
+                }
+            }
+
+            for(int i=0; i<seatNums.size(); i++){   //予約が重複しないように空席であることを確認
+                statement = connection.prepareStatement(CHECK_AVAILABLE_QUERY);
+                statement.setInt(1, cafeNum);
+                statement.setInt(2, seatNums.get(i));
+                resultSet = statement.executeQuery();
+                if(resultSet.next()){
+                    out.println("failure seatNum: "+ seatNums.get(i) + " is not available");
+                    System.out.println("failure seatNum: "+ seatNums.get(i) + " is not available");
+                    return;
                 }
             }
 
@@ -683,8 +699,9 @@ class RemoveReservationExecutor implements CommandExecutor {
             userIDs.add(args.split(" ")[0].split(",")[i]);
         }
         
-        Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");    //引数が半角英数字以外の文字を含むかをチェック
-        Matcher argsMatcher = pattern.matcher(args.replace(",", ""));
+        String filteredArgs= args.replaceAll("[" + "," + "-" + "_" + "]", "");
+        Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");    //必要な特殊文字を取り除いた引数が半角英数字以外の文字を含むかをチェック
+        Matcher argsMatcher = pattern.matcher(filteredArgs);
         if (argsMatcher.find()) {
             out.println("failure Requests should contain only alphanumeric characters.");
             return;
@@ -749,7 +766,7 @@ class FetchAvailableSeatsExecutor implements CommandExecutor {
         int cafeNum = Integer.parseInt(args.split(" ")[0]);     //引数から食堂と時間を取得
         LocalDateTime startTime = LocalDateTime.parse(args.split(" ")[1], formatter);
 
-        String filteredArgs= args.replaceAll("[" + "," + " " + "-" + ":" + "]", "");
+        String filteredArgs= args.replaceAll("[" + " " + "-" + ":" + "]", "");
         Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");    //必要な特殊文字を取り除いた引数が半角英数字以外の文字を含むかをチェック
         Matcher argsMatcher = pattern.matcher(filteredArgs);
         if (argsMatcher.find()) {
@@ -832,8 +849,9 @@ class UpdateArrivedExecutor implements CommandExecutor {
 
         String userID = args.split(" ")[0];
         
-        Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");    //スペースを取り除いた引数が半角英数字以外の文字を含むかをチェック
-        Matcher argsMatcher = pattern.matcher(args.replace(" ", ""));
+        String filteredArgs= args.replaceAll("[" + " " + "-" + "_" + "]", "");
+        Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");    //必要な特殊文字を取り除いた引数が半角英数字以外の文字を含むかをチェック
+        Matcher argsMatcher = pattern.matcher(filteredArgs);
         if (argsMatcher.find()) {
             out.println("failure Requests should contain only alphanumeric characters.");
             return;
@@ -897,10 +915,11 @@ class FetchReservationHistoryExecutor implements CommandExecutor{
         System.out.println("Fetch reservation history executor called.");
 
         String userID= args;
-        Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");    //ユーザーIDが半角英数字以外の文字を含むかをチェック
-        Matcher userIDMatcher = pattern.matcher(userID);
-        if (userIDMatcher.find()) {
-            out.println("failure UserID should contain only alphanumeric characters.");
+        String filteredArgs= args.replaceAll("[" + "-" + "_" + "]", "");
+        Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");    //必要な特殊文字を取り除いた引数が半角英数字以外の文字を含むかをチェック
+        Matcher argsMatcher = pattern.matcher(filteredArgs);
+        if (argsMatcher.find()) {
+            out.println("failure Requests should contain only alphanumeric characters.");
             return;
         }
 
