@@ -26,6 +26,14 @@ public class Server {
     static {
         commandExecutors.put("signUp", new SignUpExecutor());
         commandExecutors.put("login", new LoginExecutor());
+        commandExecutors.put("fetchFriend", new FetchFriendExecutor());
+        commandExecutors.put("addFriend", new AddFriendExecutor());
+        commandExecutors.put("removeFriend", new RemoveFriendExecutor());
+        commandExecutors.put("fetchReservation", new FetchReservationExecutor());
+        commandExecutors.put("addReservation", new AddReservationExecutor());
+        commandExecutors.put("removeReservation", new RemoveReservationExecutor());
+        commandExecutors.put("fetchAvailableSeats", new FetchAvailableSeatsExecutor());
+        commandExecutors.put("updateArrived", new UpdateArrivedExecutor());
     }
 
     public static void main(String[] args) throws IOException {
