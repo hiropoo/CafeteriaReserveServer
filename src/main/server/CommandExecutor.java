@@ -466,12 +466,15 @@ class FetchReservationExecutor implements CommandExecutor {
             String reservationInfo = "";
             if (resultSet.next()) {                
                 LocalDateTime currentTime = LocalDateTime.now();       //過去の予約なら履歴に移動させて終了
-                if(!resultSet.getTimestamp("end_time").toLocalDateTime().isAfter(currentTime)){
+                if(!resultSet.getTimestamp("end_time").toLocalDateTime().plusMinutes(6).isAfter(currentTime)){
                     if(!FetchReservationHistoryExecutor.exportToHistory(resultSet, connection, out))
                             return;     //移動に失敗したらreturn
-                    out.println("success");
-                    System.out.println("success This user has no reservations currently."); 
-                    return;
+                    resultSet = statement.executeQuery();
+                    if (!resultSet.next()){     //予約がもうない場合
+                        out.println("success");
+                        System.out.println("success This user has no reservations currently."); 
+                        return;
+                    }
                 }
                 statement = connection.prepareStatement(SELECT_USER_QUERY);
                 statement.setString(1, resultSet.getString("user_id"));     //このユーザのIDと名前をreservationInfoに格納
@@ -545,7 +548,8 @@ class FetchReservationExecutor implements CommandExecutor {
  * request ->
  * "addReservation userID1,userID2,... cafeNum seatNum startTime endTime"
  * response -> "success" or "failure message"
- * 既に予約がある時 -> "failure userID:username seatNum"
+ * メンバーの誰かが既に予約をしている時 -> "failure userID:username seatNum"
+ * 座席が空いていない時 -> "failure seatNum is not available"
  */
 class AddReservationExecutor implements CommandExecutor {
     static final String ADD_RESERVATION_QUERY = "INSERT INTO reservations (user_id, reservation_id, cafe_num, seat_num, start_time, end_time, arrived) VALUES (?, ?, ?, ?, ? , ?, ?)";
@@ -594,13 +598,20 @@ class AddReservationExecutor implements CommandExecutor {
 
                 if(resultSet.next()){
                     LocalDateTime currentTime = LocalDateTime.now();       //過去の予約かどうかを判別
-                    if(resultSet.getTimestamp("end_time").toLocalDateTime().isAfter(currentTime)){
-                        statement = connection.prepareStatement(SELECT_USER_QUERY);     //未来の予約ならこの予約を拒否
-                        statement.setString(1, userIDs.get(i));
+                    LocalDateTime arrivalDeadline = resultSet.getTimestamp("end_time").toLocalDateTime().plusMinutes(6);
+                    if(arrivalDeadline.isAfter(currentTime) || !resultSet.getBoolean("arrived")){  //終了していない予約があるならこの予約を拒否
+                        int seatNum = resultSet.getInt("seat_num");
+                        if(currentTime.isAfter(arrivalDeadline) && !resultSet.getBoolean("arrived")){
+                            seatNum = -1;           //行かなかった過去の予約があるならペナルティを付与してその予約を履歴に移行
+                            if(!FetchReservationHistoryExecutor.exportToHistory(resultSet, connection, out))
+                                return;     //移動に失敗したらreturn
+                        }
+                        statement = connection.prepareStatement(SELECT_USER_QUERY);
+                        statement.setString(1, userIDs.get(i)); 
                         userResult = statement.executeQuery();
                         userResult.next();
-
-                        out.println("failure "+ userIDs.get(i) +":"+ userResult.getString("username") +" "+ resultSet.getInt("seat_num"));
+                        
+                        out.println("failure "+ userIDs.get(i) +":"+ userResult.getString("username") +" "+ seatNum);
                         System.out.println("failure "+ userIDs.get(i) +":"+ userResult.getString("username") +" already has a reservation.");
                         return;
                     } else {
@@ -616,7 +627,7 @@ class AddReservationExecutor implements CommandExecutor {
                 statement.setInt(2, seatNums.get(i));
                 resultSet = statement.executeQuery();
                 if(resultSet.next()){
-                    out.println("failure seatNum: "+ seatNums.get(i) + " is not available");
+                    out.println("failure "+ seatNums.get(i) + " is not available");
                     System.out.println("failure seatNum: "+ seatNums.get(i) + " is not available");
                     return;
                 }
@@ -639,10 +650,8 @@ class AddReservationExecutor implements CommandExecutor {
                 if (resultSet.next()) {
                     String reservationsUser= resultSet.getString("user_id");   //データの記録に成功したかを確認
                     Timestamp reservationsTime= resultSet.getTimestamp("start_time");
-                    if(reservationsUser.equals(userIDs.get(i)) && reservationsTime.equals(Timestamp.valueOf(startTime))){
-                        //正常に保存できているならこの段階では何もしない
-                    }else {
-                        out.println("failure Failed to add reservation.");
+                    if(!reservationsUser.equals(userIDs.get(i)) || !reservationsTime.equals(Timestamp.valueOf(startTime))){
+                        System.out.println("failure Failed to add reservation.");     //out化
                         System.out.println("failure Failed to add reservation.");
                         return;
                     }
@@ -720,9 +729,7 @@ class RemoveReservationExecutor implements CommandExecutor {
                 statement.setString(1, userIDs.get(i));
                 int rowsAffected = statement.executeUpdate();   //予約を削除
         
-                if (rowsAffected > 0) {
-                    //正常に削除できているならこの段階では何もしない
-                } else {
+                if (rowsAffected <= 0) {
                     out.println("failure Failed to remove reservations.");
                     System.out.println("failure Failed to remove reservations."); 
                 }
@@ -759,7 +766,7 @@ class RemoveReservationExecutor implements CommandExecutor {
 class FetchAvailableSeatsExecutor implements CommandExecutor {
     static final String SELECT_RESERVATION_QUERY = "SELECT * FROM reservations WHERE cafe_num = ? AND start_time = ?";
     static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm:ss");
-    static final int MAX_SEATS_1 = 30, MAX_SEATS_2 = 30;    //第一、第二食堂の最大座席数
+    static final int MAX_SEATS_1 = 54, MAX_SEATS_2 = 60;    //第一、第二食堂の最大座席数
 
     @Override
     public void execute(PrintWriter out, String args) {
@@ -789,7 +796,7 @@ class FetchAvailableSeatsExecutor implements CommandExecutor {
                     availableSeats.add(i);
                 }
             } else if (cafeNum == 2){
-                for (int i=1; i <= MAX_SEATS_2; i++){       /*最大席数が同じなら削除 */
+                for (int i=1; i <= MAX_SEATS_2; i++){
                     availableSeats.add(i);
                 }
             }
@@ -843,7 +850,9 @@ class FetchAvailableSeatsExecutor implements CommandExecutor {
  * response -> "success" or "failure message"
  */
 class UpdateArrivedExecutor implements CommandExecutor {
+    static final String SELECT_RESERVATION_ID_QUERY = "SELECT * FROM reservations WHERE user_id = ?";
     static final String UPDATE_ARRIVED_QUERY = "UPDATE reservations SET arrived = ? WHERE user_id = ?";
+    static final String SELECT_RESERVATION_END_TIME_QUERY = "SELECT * FROM reservations WHERE end_time < ?";
 
     @Override
     public void execute(PrintWriter out, String args) {        
@@ -866,8 +875,23 @@ class UpdateArrivedExecutor implements CommandExecutor {
             connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
             System.out.println("Connected to DB.");
 
+            statement = connection.prepareStatement(SELECT_RESERVATION_ID_QUERY);
+            statement.setString(1, userID);
+            resultSet = statement.executeQuery();
+
+            if(resultSet.next()){
+                LocalDateTime currentTime = LocalDateTime.now();
+                LocalDateTime startTime = resultSet.getTimestamp("start_time").toLocalDateTime();
+                if(startTime.plusMinutes(26).isAfter(currentTime) && currentTime.isAfter(startTime.minusMinutes(5))){
+                } else {    //現在、到着報告可能なのか確認
+                    out.println("failure This reservation cannot be updated now");
+                    System.out.println("failure This reservation cannot be updated now");
+                    return;
+                }
+            }
+
             statement = connection.prepareStatement(UPDATE_ARRIVED_QUERY);
-            statement.setBoolean(1, true);     //指定された食堂・時間の予約を探す
+            statement.setBoolean(1, true);     //指定されたユーザの予約のarrivedを更新
             statement.setString(2, userID);
             int rowsUpdated = statement.executeUpdate();
             
@@ -898,6 +922,47 @@ class UpdateArrivedExecutor implements CommandExecutor {
             System.out.println();
         }
     }
+
+    static void checkArrival(){
+        System.out.println("Check Arrival called");
+        Connection connection = null;
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+        try{
+            connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+            System.out.println("Connected to DB.");
+
+            statement = connection.prepareStatement(SELECT_RESERVATION_END_TIME_QUERY);
+            statement.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));     //過去の予約を探す
+            resultSet = statement.executeQuery();
+
+            PrintWriter defaultOut = new PrintWriter(System.out);
+            while (resultSet.next()) {
+                if(!FetchReservationHistoryExecutor.exportToHistory(resultSet, connection, defaultOut))     //過去の予約なら履歴テーブルに移動させ、現在の予約を続行
+                    return;     //移動に失敗したらreturn
+                resultSet = statement.executeQuery();   //二重に履歴に追加しないようにresultSetをリセット
+            }
+        } catch (SQLException e) {
+            System.out.println("failure Failed to check arrival.");
+            e.printStackTrace();
+        } finally {
+            try {
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+                if (statement != null) {
+                    statement.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                System.out.println("failure Failed to close connection.");
+                e.printStackTrace();
+            }
+            System.out.println();
+        }
+    }
 }
 
 /*
@@ -908,6 +973,7 @@ class UpdateArrivedExecutor implements CommandExecutor {
 */
 class FetchReservationHistoryExecutor implements CommandExecutor{
     static final String EXPORT_RESERVATION_QUERY = "INSERT INTO reserv_history (user_id, members, cafe_num, seat_num, start_time, end_time, arrived) VALUES (?, ?, ?, ?, ? , ?, ?)";
+    static final String ADD_RESERVATION_QUERY = "INSERT INTO reservations (user_id, reservation_id, cafe_num, seat_num, start_time, end_time, arrived) VALUES (?, ?, ?, ?, ? , ?, ?)";
     static final String SELECT_RESERVATION_QUERY = "SELECT * FROM reservations WHERE user_id = ?";
     static final String SELECT_RESERV_HISTORY_QUERY = "SELECT * FROM reserv_history WHERE user_id = ?";
     static final String REMOVE_RESERVATION_QUERY = "DELETE FROM reservations WHERE user_id = ?";
@@ -940,7 +1006,7 @@ class FetchReservationHistoryExecutor implements CommandExecutor{
             resultSet = statement.executeQuery();
             if(resultSet.next()){
                 LocalDateTime currentTime = LocalDateTime.now();        //過去の予約がある場合は履歴に移動
-                if(!resultSet.getTimestamp("end_time").toLocalDateTime().isAfter(currentTime)){
+                if(!resultSet.getTimestamp("end_time").toLocalDateTime().plusMinutes(6).isAfter(currentTime)){
                     if(!exportToHistory(resultSet, connection, out))
                         return;
                 }
@@ -1021,6 +1087,15 @@ class FetchReservationHistoryExecutor implements CommandExecutor{
            
             String membersWithoutUser = "";
             while(membersResultSet.next()){         //リクエストを送信したユーザを含め、全員の予約を履歴に移動させ、予約テーブルからは削除
+                statement = connection.prepareStatement(REMOVE_RESERVATION_QUERY);
+                statement.setString(1, membersResultSet.getString("user_id"));
+                int rowsAffected = statement.executeUpdate();   //予約テーブルから削除
+
+                if(!membersResultSet.getBoolean("arrived") && membersResultSet.getInt("seat_num")!=-1){
+                    if(!createPenaltyReservation(membersResultSet, connection, out))
+                        return false;     //失敗したらreturn
+                }
+
                 membersWithoutUser = membersInfo;
                 String entryToRemove = "^" + membersResultSet.getString("user_id") + "[^,]*,";
                 membersWithoutUser = membersWithoutUser.replaceFirst(entryToRemove, "");     //メンバ一覧から本人を削除
@@ -1035,11 +1110,8 @@ class FetchReservationHistoryExecutor implements CommandExecutor{
                 statement.setTimestamp(5, membersResultSet.getTimestamp("start_time"));
                 statement.setTimestamp(6, membersResultSet.getTimestamp("end_time"));
                 statement.setBoolean(7, membersResultSet.getBoolean("arrived"));
-                int rowsAffected = statement.executeUpdate();
-
-                statement = connection.prepareStatement(REMOVE_RESERVATION_QUERY);
-                statement.setString(1, membersResultSet.getString("user_id"));
                 int rowsAffected_2 = statement.executeUpdate();
+
                 if(rowsAffected == 0 || rowsAffected_2 == 0) {
                     out.println("failure Failed to export reservation info.");
                     System.out.println("failure Failed to export reservation info.");
@@ -1074,4 +1146,44 @@ class FetchReservationHistoryExecutor implements CommandExecutor{
             }
         }
     }
+
+    static boolean createPenaltyReservation(ResultSet resultSet, Connection connection, PrintWriter out){
+        PreparedStatement statement = null;
+        String reservationID = MyUUID.getUUID();
+        try {
+            statement = connection.prepareStatement(ADD_RESERVATION_QUERY);
+            statement.setString(1, resultSet.getString("user_id"));
+            statement.setString(2, reservationID);
+            statement.setInt(3, resultSet.getInt("cafe_num"));
+            statement.setInt(4, -1);
+            statement.setTimestamp(5, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setTimestamp(6, Timestamp.valueOf(LocalDateTime.now().plusWeeks(2)));
+            statement.setBoolean(7, false);
+            int rowsAffected = statement.executeUpdate();
+
+            if(rowsAffected>0){
+                System.out.println("success Gave penalty successfully.");
+                return true;
+            } else {
+                out.println("failure Failed to give penalty.");
+                System.out.println("failure Failed to give penalty.");
+                return false;
+            }
+        } catch (SQLException e) {
+            out.println("failure Failed to give penalty.");
+            System.out.println("failure Failed to give penalty.");
+            e.printStackTrace();
+            return false;
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+            } catch (SQLException e) {
+                out.println("failure Failed to close connection.");
+                System.out.println("failure Failed to close connection.");
+                e.printStackTrace();
+            }
+        }
+    } 
 }
