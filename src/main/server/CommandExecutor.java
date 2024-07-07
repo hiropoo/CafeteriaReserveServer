@@ -202,6 +202,7 @@ class FetchFriendExecutor implements CommandExecutor {
 
     @Override
     public void execute(PrintWriter out, String args) {
+
         try {
             System.out.println("Fetch friend executor called.");
 
