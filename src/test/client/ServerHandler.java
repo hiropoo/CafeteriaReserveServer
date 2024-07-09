@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -352,7 +351,10 @@ public class ServerHandler {
             if (command.equals("success")) {
                 // 予約情報をUserクラスに保存
                 // エラー時はParseExceptionをthrow
-                Reservation.fromResponse(args);
+                if (!args.isEmpty())
+                    Reservation.fromResponse(args);
+                else
+                    Reservation.clear();
 
                 System.out.println("Reservation fetched successfully.");
                 isFetchSuccess = true;
@@ -524,6 +526,39 @@ public class ServerHandler {
         }
 
         return availableSeats;
+    }
+
+    public static boolean updateArrived() {
+        try {
+            connect();
+
+            out.println("updateArrived " + User.getUserID());
+            System.out.println("Sent: updateArrived " + User.getUserID());
+
+            String response = in.readLine();
+            String command = response.split(" ", 2)[0];
+            String args = response.split(" ", 2).length > 1 ? response.split(" ", 2)[1] : "";
+            System.out.println("Received: " + command + " " + args);
+
+            if (command.equals("success")) {
+                Reservation.setArrived(true);
+                System.out.println("Arrival status updated successfully.");
+                return true;
+            } else if (command.equals("failure")) {
+                System.out.println("Failed to update arrival status.");
+                System.out.println("Response: " + args);
+            } else {
+                System.out.println("Invalid response: " + response);
+            }
+
+
+        } catch (Exception e) {
+            // TODO: handle exception
+        } finally {
+            disconnect();
+        }
+
+        return false;
     }
 
 }

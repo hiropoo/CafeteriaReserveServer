@@ -2,7 +2,6 @@ package test.client;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.List;
 
 import test.util.Reservation;
 import test.util.User;
@@ -40,11 +39,14 @@ public class Client {
         ServerHandler.login();
 
         /* 友達リスト取得のテスト */
-        // ServerHandler.fetchFriend();
-        // for (String friendID : User.getFriendList().keySet()) {
-        // System.out.println("Friend ID: " + friendID + ", Friend Name: " +
-        // User.getFriendList().get(friendID));
-        // }
+        boolean result = ServerHandler.fetchFriend();
+
+        if (result) {
+            for (String friendID : User.getFriendList().keySet()) {
+                System.out.println("Friend ID: " + friendID + ", Friend Name: " +
+                        User.getFriendList().get(friendID));
+            }
+        }
 
         /* 友達追加のテスト */
         // ServerHandler.addFriend("DEF456");
@@ -81,18 +83,29 @@ public class Client {
         /* 予約削除のテスト */
         // ServerHandler.removeReservation();
         // System.out.println("--- Reservation ---");
-        // System.out.println(Reservation.getStartTime() == null ? "Reservation does not exist" : "Reservation: " +
-        //         Reservation.getStartTime().toString() + " ~ "
-        //         + Reservation.getEndTime().toString());
+        // System.out.println(Reservation.getStartTime() == null ? "Reservation does not
+        // exist" : "Reservation: " +
+        // Reservation.getStartTime().toString() + " ~ "
+        // + Reservation.getEndTime().toString());
 
         /* 空席情報取得のテスト */
-        // List<Integer> availableSeats = ServerHandler.fetchAvailableSeats(1, LocalDateTime.of(2024, 7, 11, 12, 00, 00), 
-        //         LocalDateTime.of(2024, 7, 11, 12, 00, 00));
+        // List<Integer> availableSeats = ServerHandler.fetchAvailableSeats(1,
+        // LocalDateTime.of(2024, 7, 11, 12, 00, 00),
+        // LocalDateTime.of(2024, 7, 11, 12, 00, 00));
         // System.out.println("--- Available Seats ---");
         // for (int seatNum : availableSeats) {
-        //     System.out.println("Seat Number: " + seatNum);
+        // System.out.println("Seat Number: " + seatNum);
         // }
         // System.out.println();
+
+        /* arrivedを更新テスト */
+        ServerHandler.updateArrived();
+        System.out.println("--- Reservation ---");
+        System.out.println("Reservation: " +
+        Reservation.getStartTime().toString() + " ~ "
+        + Reservation.getEndTime().toString());
+        System.out.println("Arrived: " + Reservation.isArrived());
+
     }
 
 }
