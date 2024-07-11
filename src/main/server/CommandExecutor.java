@@ -111,7 +111,6 @@ class SignUpExecutor implements CommandExecutor {
                     connection.close();
                 }
             } catch (SQLException e) {
-                out.println("failure Failed to close connection.");
                 System.out.println("failure Failed to close connection.");
                 e.printStackTrace();
             }
@@ -187,7 +186,6 @@ class LoginExecutor implements CommandExecutor {
                     connection.close();
                 }
             } catch (SQLException e) {
-                out.println("failure Failed to close connection.");
                 System.out.println("failure Failed to close connection.");
                 e.printStackTrace();
             }
@@ -254,9 +252,8 @@ class FetchFriendExecutor implements CommandExecutor {
                 out.println("success" + friendList);
                 System.out.println("FriendList:'" + friendList + "' fetched successfully");
             }else {
-                out.println("success "); 
-                System.out.println("success This user has no friends currently.");      /*エラーと友達いないのを区別できない*/
-            }
+                out.println("failure");
+                System.out.println("failure An error occurred or this user has no reservations currently.");            }
         } catch (SQLException e) {
             out.println("failure Failed to fetch friend.");  
             System.out.println("failure Failed to fetch friend.");
@@ -276,7 +273,6 @@ class FetchFriendExecutor implements CommandExecutor {
                     connection.close();
                 }
             } catch (SQLException e) {
-                out.println("failure Failed to close connection.");
                 System.out.println("failure Failed to close connection.");
                 e.printStackTrace();
             }
@@ -352,7 +348,6 @@ class AddFriendExecutor implements CommandExecutor {
                     connection.close();
                 }
             } catch (SQLException e) {
-                out.println("failure Failed to close connection.");
                 System.out.println("failure Failed to close connection.");
                 e.printStackTrace();
             }
@@ -417,7 +412,6 @@ class RemoveFriendExecutor implements CommandExecutor {
                     connection.close();
                 }
             } catch (SQLException e) {
-                out.println("failure Failed to close connection.");
                 System.out.println("failure Failed to close connection.");
                 e.printStackTrace();
             }
@@ -509,9 +503,8 @@ class FetchReservationExecutor implements CommandExecutor {
                 out.println("success " + reservationInfo);
                 System.out.println("success '" + reservationInfo + "' fetched successfully");
             }else {
-                out.println("success");
-                System.out.println("success This user has no reservations currently.");
-            }
+                out.println("failure");
+                System.out.println("failure An error occurred or this user has no reservations currently.");            }
         } catch (SQLException e) {
             out.println("failure Failed to fetch reservations.");
             System.out.println("failure Failed to fetch reservations.");
@@ -534,7 +527,6 @@ class FetchReservationExecutor implements CommandExecutor {
                     connection.close();
                 }
             } catch (SQLException e) {
-                out.println("failure Failed to close connection.");
                 System.out.println("failure Failed to close connection.");
                 e.printStackTrace();
             }
@@ -682,7 +674,6 @@ class AddReservationExecutor implements CommandExecutor {
                     connection.close();
                 }
             } catch (SQLException e) {
-                out.println("failure Failed to close connection.");
                 System.out.println("failure Failed to close connection.");
                 e.printStackTrace();
             }
@@ -749,7 +740,6 @@ class RemoveReservationExecutor implements CommandExecutor {
                     connection.close();
                 }
             } catch (SQLException e) {
-                out.println("failure Failed to close connection.");
                 System.out.println("failure Failed to close connection.");
                 e.printStackTrace();
             }
@@ -835,7 +825,6 @@ class FetchAvailableSeatsExecutor implements CommandExecutor {
                     connection.close();
                 }
             } catch (SQLException e) {
-                out.println("failure Failed to close connection.");
                 System.out.println("failure Failed to close connection.");
                 e.printStackTrace();
             }
@@ -888,6 +877,10 @@ class UpdateArrivedExecutor implements CommandExecutor {
                     System.out.println("failure This reservation cannot be updated now");
                     return;
                 }
+            } else {
+                out.println("failure Failed to update arrived.");
+                System.out.println("failure Failed to update 'arrived'.");
+                return;
             }
 
             statement = connection.prepareStatement(UPDATE_ARRIVED_QUERY);
@@ -898,6 +891,9 @@ class UpdateArrivedExecutor implements CommandExecutor {
             if(rowsUpdated > 0){
                 out.println("success");
                 System.out.println("success Updated 'arrived' successfully.");
+            } else {
+                out.println("failure Failed to update arrived.");
+                System.out.println("failure Failed to update 'arrived'.");
             }
         } catch (SQLException e) {
             out.println("failure Failed to update arrived.");
@@ -915,7 +911,6 @@ class UpdateArrivedExecutor implements CommandExecutor {
                     connection.close();
                 }
             } catch (SQLException e) {
-                out.println("failure Failed to close connection.");
                 System.out.println("failure Failed to close connection.");
                 e.printStackTrace();
             }
@@ -942,6 +937,7 @@ class UpdateArrivedExecutor implements CommandExecutor {
                     return;     //移動に失敗したらreturn
                 resultSet = statement.executeQuery();   //二重に履歴に追加しないようにresultSetをリセット
             }
+            System.out.println("success Check arrival done.");
         } catch (SQLException e) {
             System.out.println("failure Failed to check arrival.");
             e.printStackTrace();
@@ -1055,7 +1051,6 @@ class FetchReservationHistoryExecutor implements CommandExecutor{
                     connection.close();
                 }
             } catch (SQLException e) {
-                out.println("failure Failed to close connection.");
                 System.out.println("failure Failed to close connection.");
                 e.printStackTrace();
             }
@@ -1140,7 +1135,6 @@ class FetchReservationHistoryExecutor implements CommandExecutor{
                     usersStatement.close();
                 }
             } catch (SQLException e) {
-                out.println("failure Failed to close connection.");
                 System.out.println("failure Failed to close connection.");
                 e.printStackTrace();
             }
@@ -1180,7 +1174,6 @@ class FetchReservationHistoryExecutor implements CommandExecutor{
                     statement.close();
                 }
             } catch (SQLException e) {
-                out.println("failure Failed to close connection.");
                 System.out.println("failure Failed to close connection.");
                 e.printStackTrace();
             }
