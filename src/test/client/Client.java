@@ -2,7 +2,6 @@ package test.client;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.List;
 
 import test.util.Reservation;
 import test.util.User;

@@ -17,23 +17,24 @@ import java.util.concurrent.TimeUnit;
 import properties.PropertyUtil;
 
 public class Server {
-    private static Map<String, CommandExecutor> commandExecutors = new HashMap<>(); // コマンドとそれに対応するクラスのマッピング
+    private static Map<String, CommandExecutorStub> commandExecutors = new HashMap<>(); // コマンドとそれに対応するクラスのマッピング
 
     private static ServerSocket serverSocket = null; // サーバーソケット
     private static final int PORT = Integer.parseInt(PropertyUtil.getProperty("port")); // サーバーのポート番号
 
     // コマンドマップの初期化
     static {
-        commandExecutors.put("signUp", new SignUpExecutor());
-        commandExecutors.put("login", new LoginExecutor());
-        commandExecutors.put("fetchFriend", new FetchFriendExecutor());
-        commandExecutors.put("addFriend", new AddFriendExecutor());
-        commandExecutors.put("removeFriend", new RemoveFriendExecutor());
-        commandExecutors.put("fetchReservation", new FetchReservationExecutor());
-        commandExecutors.put("addReservation", new AddReservationExecutor());
-        commandExecutors.put("removeReservation", new RemoveReservationExecutor());
-        commandExecutors.put("fetchAvailableSeats", new FetchAvailableSeatsExecutor());
-        commandExecutors.put("updateArrived", new UpdateArrivedExecutor());
+        commandExecutors.put("signUp", new SignUpExecutorStub());
+        commandExecutors.put("login", new LoginExecutorStub());
+        commandExecutors.put("fetchFriend", new FetchFriendExecutorStub());
+        commandExecutors.put("addFriend", new AddFriendExecutorStub());
+        commandExecutors.put("removeFriend", new RemoveFriendExecutorStub());
+        commandExecutors.put("fetchReservation", new FetchReservationExecutorStub());
+        commandExecutors.put("addReservation", new AddReservationExecutorStub());
+        commandExecutors.put("removeReservation", new RemoveReservationExecutorStub());
+        commandExecutors.put("fetchAvailableSeats", new FetchAvailableSeatsExecutorStub());
+        commandExecutors.put("updateArrived", new UpdateArrivedExecutorStub());
+        commandExecutors.put("fetchReservationHistory", new FetchReservationHistoryExecutorStub());
     }
 
     public static void main(String[] args) throws IOException {
@@ -44,7 +45,7 @@ public class Server {
         Runnable task = new Runnable() {
             @Override
             public void run() {
-                UpdateArrivedExecutor.checkArrival();
+                UpdateArrivedExecutorStub.checkArrival();
             }
         };
         long initialDelay = calculateInitialDelay();
@@ -84,7 +85,7 @@ public class Server {
                 String args = parts.length > 1 ? parts[1] : "";
 
                 // コマンドの実行
-                CommandExecutor cmdExecutor = commandExecutors.get(command);
+                CommandExecutorStub cmdExecutor = commandExecutors.get(command);
                 if (cmdExecutor != null) {
                     cmdExecutor.execute(out, args);
                 } else {

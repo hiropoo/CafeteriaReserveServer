@@ -31,7 +31,7 @@ interface CommandExecutor {
 /*
  * ユーザーの登録処理
  * request -> "signUp userName password studentID"
- * response -> "Success userID" or "failure message"
+ * response -> "success userID" or "failure message"
  */
 class SignUpExecutor implements CommandExecutor {
     private static final String CHECK_USER_QUERY = "SELECT * FROM users WHERE username = ?";
@@ -46,9 +46,7 @@ class SignUpExecutor implements CommandExecutor {
         String name = args.split(" ")[0];
         String password = args.split(" ")[1];
         int studentID = Integer.parseInt(args.split(" ")[2]);
-        System.out.println(
-                "userID: " + userID + ", username: " + name + ", password: " + password + ", studentID: " + studentID);
-
+        
         // ユーザー名とパスワードが半角英数字以外の文字を含むかをチェック
         Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");
         Matcher nameMatcher = pattern.matcher(name);
@@ -97,23 +95,7 @@ class SignUpExecutor implements CommandExecutor {
             e.printStackTrace();
 
         } finally {
-            try {
-                if (resultSet != null) {
-                    resultSet.close();
-                }
-                if (checkStatement != null) {
-                    checkStatement.close();
-                }
-                if (insertStatement != null) {
-                    insertStatement.close();
-                }
-                if (connection != null) {
-                    connection.close();
-                }
-            } catch (SQLException e) {
-                System.out.println("failure Failed to close connection.");
-                e.printStackTrace();
-            }
+            GeneralMethods.closeAll(connection, resultSet, null, null, checkStatement, insertStatement);
             System.out.println();
         }
     }
@@ -134,14 +116,11 @@ class LoginExecutor implements CommandExecutor {
         // 受け取った引数をスペースで分割し、ユーザー名とパスワードを取得
         String name = args.split(" ")[0];
         String password = args.split(" ")[1];
-        System.out.println("username: " + name);
-        System.out.println("password: " + password);
 
         // ユーザー名とパスワードが半角英数字以外の文字を含むかをチェック
         Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");
         Matcher nameMatcher = pattern.matcher(name);
         Matcher passwordMatcher = pattern.matcher(password);
-
         if (nameMatcher.find() || passwordMatcher.find()) {
             out.println("failure Username and password should contain only alphanumeric characters.");
             return;
@@ -175,20 +154,7 @@ class LoginExecutor implements CommandExecutor {
             System.out.println("failure Failed to login user " + name);
             e.printStackTrace();
         } finally {
-            try {
-                if (resultSet != null) {
-                    resultSet.close();
-                }
-                if (statement != null) {
-                    statement.close();
-                }
-                if (connection != null) {
-                    connection.close();
-                }
-            } catch (SQLException e) {
-                System.out.println("failure Failed to close connection.");
-                e.printStackTrace();
-            }
+            GeneralMethods.closeAll(connection, resultSet, null, null, null, statement);
             System.out.println();
         }
 
@@ -260,23 +226,7 @@ class FetchFriendExecutor implements CommandExecutor {
             System.out.println("failure Failed to fetch friend.");
             e.printStackTrace();
         } finally {
-            try {
-                if (resultSet != null) {
-                    resultSet.close();
-                }
-                if (resultSet2 != null) {
-                    resultSet2.close();
-                }
-                if (statement != null) {
-                    statement.close();
-                }
-                if (connection != null) {
-                    connection.close();
-                }
-            } catch (SQLException e) {
-                System.out.println("failure Failed to close connection.");
-                e.printStackTrace();
-            }
+            GeneralMethods.closeAll(connection, resultSet, resultSet2, null, null, statement);
             System.out.println();
         }
     }
@@ -335,23 +285,7 @@ class AddFriendExecutor implements CommandExecutor {
             System.out.println("failure Failed to add friend.");
             e.printStackTrace();
         } finally {
-            try {
-                if (resultSet != null) {
-                    resultSet.close();
-                }
-                if (userResult != null) {
-                    userResult.close();
-                }
-                if (statement != null) {
-                    statement.close();
-                }
-                if (connection != null) {
-                    connection.close();
-                }
-            } catch (SQLException e) {
-                System.out.println("failure Failed to close connection.");
-                e.printStackTrace();
-            }
+            GeneralMethods.closeAll(connection, resultSet, userResult, null, null, statement);
             System.out.println();
         }
     }
@@ -405,17 +339,7 @@ class RemoveFriendExecutor implements CommandExecutor {
             System.out.println("failure Failed to remove friend.");
             e.printStackTrace();
         } finally {
-            try {
-                if (statement != null) {
-                    statement.close();
-                }
-                if (connection != null) {
-                    connection.close();
-                }
-            } catch (SQLException e) {
-                System.out.println("failure Failed to close connection.");
-                e.printStackTrace();
-            }
+            GeneralMethods.closeAll(connection, null, null, null, null, statement);
             System.out.println();
         }
     }
@@ -466,8 +390,8 @@ class FetchReservationExecutor implements CommandExecutor {
                             return;     //移動に失敗したらreturn
                     resultSet = statement.executeQuery();
                     if (!resultSet.next()){     //予約がもうない場合
-                        out.println("success");
-                        System.out.println("success This user has no reservations currently."); 
+                        out.println("failure");
+                        System.out.println("failure An error occurred or this user has no reservations currently.");
                         return;
                     }
                 }
@@ -512,26 +436,7 @@ class FetchReservationExecutor implements CommandExecutor {
             System.out.println("failure Failed to fetch reservations.");
             e.printStackTrace();
         } finally {
-            try {
-                if (resultSet != null) {
-                    resultSet.close();
-                }
-                if (membersResultSet != null) {
-                    membersResultSet.close();
-                }
-                if (userInfoResultSet != null) {
-                    userInfoResultSet.close();
-                }
-                if (statement != null) {
-                    statement.close();
-                }
-                if (connection != null) {
-                    connection.close();
-                }
-            } catch (SQLException e) {
-                System.out.println("failure Failed to close connection.");
-                e.printStackTrace();
-            }
+            GeneralMethods.closeAll(connection, resultSet, membersResultSet, userInfoResultSet, null, statement);
             System.out.println();
         }
     }
@@ -662,23 +567,7 @@ class AddReservationExecutor implements CommandExecutor {
             System.out.println("failure Failed to add reservation.");
             e.printStackTrace();
         } finally {
-            try {
-                if (resultSet != null) {
-                    resultSet.close();
-                }
-                if (userResult != null) {
-                    userResult.close();
-                }
-                if (statement != null) {
-                    statement.close();
-                }
-                if (connection != null) {
-                    connection.close();
-                }
-            } catch (SQLException e) {
-                System.out.println("failure Failed to close connection.");
-                e.printStackTrace();
-            }
+            GeneralMethods.closeAll(connection, resultSet, userResult, null, null, statement);
             System.out.println();
         }
     }
@@ -734,17 +623,7 @@ class RemoveReservationExecutor implements CommandExecutor {
             System.out.println("failure Failed to remove reservations."); 
             e.printStackTrace();
         } finally {
-            try {
-                if (statement != null) {
-                    statement.close();
-                }
-                if (connection != null) {
-                    connection.close();
-                }
-            } catch (SQLException e) {
-                System.out.println("failure Failed to close connection.");
-                e.printStackTrace();
-            }
+            GeneralMethods.closeAll(connection, null, null, null, null, statement);
             System.out.println();
         }        
     }
@@ -816,20 +695,7 @@ class FetchAvailableSeatsExecutor implements CommandExecutor {
             System.out.println("failure Failed to fetch available seats.");
             e.printStackTrace();
         } finally {
-            try {
-                if (resultSet != null) {
-                    resultSet.close();
-                }
-                if (statement != null) {
-                    statement.close();
-                }
-                if (connection != null) {
-                    connection.close();
-                }
-            } catch (SQLException e) {
-                System.out.println("failure Failed to close connection.");
-                e.printStackTrace();
-            }
+            GeneralMethods.closeAll(connection, resultSet, null, null, null, statement);
             System.out.println();
         }
     }
@@ -902,20 +768,7 @@ class UpdateArrivedExecutor implements CommandExecutor {
             System.out.println("failure Failed to update 'arrived'.");
             e.printStackTrace();
         } finally {
-            try {
-                if (resultSet != null) {
-                    resultSet.close();
-                }
-                if (statement != null) {
-                    statement.close();
-                }
-                if (connection != null) {
-                    connection.close();
-                }
-            } catch (SQLException e) {
-                System.out.println("failure Failed to close connection.");
-                e.printStackTrace();
-            }
+            GeneralMethods.closeAll(connection, resultSet, null, null, null, statement);
             System.out.println();
         }
     }
@@ -935,7 +788,7 @@ class UpdateArrivedExecutor implements CommandExecutor {
 
             PrintWriter defaultOut = new PrintWriter(System.out);
             while (resultSet.next()) {
-                if(!FetchReservationHistoryExecutor.exportToHistory(resultSet, connection, defaultOut))     //過去の予約なら履歴テーブルに移動させ、現在の予約を続行
+                if(!FetchReservationHistoryExecutor.exportToHistory(resultSet, connection, defaultOut))     //過去の予約を履歴テーブルに移動させる
                     return;     //移動に失敗したらreturn
                 resultSet = statement.executeQuery();   //二重に履歴に追加しないようにresultSetをリセット
             }
@@ -943,20 +796,7 @@ class UpdateArrivedExecutor implements CommandExecutor {
             System.out.println("failure Failed to check arrival.");
             e.printStackTrace();
         } finally {
-            try {
-                if (resultSet != null) {
-                    resultSet.close();
-                }
-                if (statement != null) {
-                    statement.close();
-                }
-                if (connection != null) {
-                    connection.close();
-                }
-            } catch (SQLException e) {
-                System.out.println("failure Failed to close connection.");
-                e.printStackTrace();
-            }
+            GeneralMethods.closeAll(connection, resultSet, null, null, null, statement);
             System.out.println();
         }
     }
@@ -965,7 +805,7 @@ class UpdateArrivedExecutor implements CommandExecutor {
 /*
 * 予約履歴取得処理
 * request -> "fetchReservationHistory userID"
-* response -> "success members cafeNum seatNum startTime endTime went, members cafeNum seatNum..." or "failure message"
+* response -> "success membersID:membersName,membersID:membersName cafeNum seatNum startTime endTime went,next members cafeNum seatNum..." or "failure message"
 * （members は自分を含まない、一緒に予約した人）
 */
 class FetchReservationHistoryExecutor implements CommandExecutor{
@@ -1016,7 +856,7 @@ class FetchReservationHistoryExecutor implements CommandExecutor{
                 String reservHistory = "";
                 do {
                     if(!reservHistory.equals("")){  //先頭でなければカンマを追加
-                        reservHistory = reservHistory + ",";
+                        reservHistory = reservHistory + ",next";
                     }
                     LocalDateTime localStartTime = historyResultSet.getTimestamp("start_time").toLocalDateTime();
                     LocalDateTime localEndTime = historyResultSet.getTimestamp("end_time").toLocalDateTime();
@@ -1038,23 +878,7 @@ class FetchReservationHistoryExecutor implements CommandExecutor{
             System.out.println("failure Failed to fetch reservations.");
             e.printStackTrace();
         } finally {
-            try {
-                if (resultSet != null) {
-                    resultSet.close();
-                }
-                if (historyResultSet != null) {
-                    historyResultSet.close();
-                }
-                if (statement != null) {
-                    statement.close();
-                }
-                if (connection != null) {
-                    connection.close();
-                }
-            } catch (SQLException e) {
-                System.out.println("failure Failed to close connection.");
-                e.printStackTrace();
-            }
+            GeneralMethods.closeAll(connection, resultSet, historyResultSet, null, null, statement);
             System.out.println();
         }
     }
@@ -1122,23 +946,7 @@ class FetchReservationHistoryExecutor implements CommandExecutor{
             e.printStackTrace();
             return false;
         } finally {
-            try {
-                if (membersResultSet != null) {
-                    membersResultSet.close();
-                }
-                if (userInfoResultSet != null) {
-                    userInfoResultSet.close();
-                }
-                if (statement != null) {
-                    statement.close();
-                }
-                if (usersStatement != null) {
-                    usersStatement.close();
-                }
-            } catch (SQLException e) {
-                System.out.println("failure Failed to close connection.");
-                e.printStackTrace();
-            }
+            GeneralMethods.closeAll(null, membersResultSet, userInfoResultSet, null, statement, usersStatement);
         }
     }
 
@@ -1151,8 +959,8 @@ class FetchReservationHistoryExecutor implements CommandExecutor{
             statement.setString(2, reservationID);
             statement.setInt(3, resultSet.getInt("cafe_num"));
             statement.setInt(4, -1);
-            statement.setTimestamp(5, Timestamp.valueOf(LocalDateTime.now()));
-            statement.setTimestamp(6, Timestamp.valueOf(LocalDateTime.now().plusWeeks(2)));
+            statement.setTimestamp(5, Timestamp.valueOf(LocalDateTime.now().plusWeeks(2)));
+            statement.setTimestamp(6, Timestamp.valueOf(LocalDateTime.now().plusWeeks(2).plusMinutes(20)));
             statement.setBoolean(7, false);
             int rowsAffected = statement.executeUpdate();
 
@@ -1170,14 +978,35 @@ class FetchReservationHistoryExecutor implements CommandExecutor{
             e.printStackTrace();
             return false;
         } finally {
-            try {
-                if (statement != null) {
-                    statement.close();
-                }
-            } catch (SQLException e) {
-                System.out.println("failure Failed to close connection.");
-                e.printStackTrace();
-            }
+            GeneralMethods.closeAll(null, null, null, null, null, statement);
         }
     } 
+}
+
+class GeneralMethods {
+    static void closeAll(Connection cnt, ResultSet rst1, ResultSet rst2, ResultSet rst3, PreparedStatement stmt1, PreparedStatement stmt2){
+        try {
+            if(cnt != null){
+                cnt.close();
+            }
+            if(rst1 != null){
+                rst1.close();
+            }
+            if(rst2 != null){
+                rst2.close();
+            }
+            if(rst3 != null){
+                rst3.close();
+            }
+            if(stmt1 != null){
+                stmt1.close();
+            }
+            if(stmt2 != null){
+                stmt2.close();
+            } 
+        } catch (SQLException e) {
+            System.out.println("failure Failed to close connection.");
+            e.printStackTrace();
+        }
+    }
 }
