@@ -526,4 +526,71 @@ public class ServerHandler {
         return availableSeats;
     }
 
+    public static boolean updateArrived() {
+        try {
+            System.out.println("Updating arrival status.");
+            connect();
+
+            out.println("updateArrived " + User.getUserID());
+            System.out.println("Sent: updateArrived " + User.getUserID());
+
+            String response = in.readLine();
+            String command = response.split(" ", 2)[0];
+            String args = response.split(" ", 2).length > 1 ? response.split(" ", 2)[1] : "";
+            System.out.println("Received: " + command + " " + args);
+
+            if (command.equals("success")) {
+                Reservation.setArrived(true);
+                System.out.println("Arrival status updated successfully.");
+                return true;
+            } else if (command.equals("failure")) {
+                System.out.println("Failed to update arrival status.");
+                System.out.println("Response: " + args);
+            } else {
+                System.out.println("Invalid response: " + response);
+            }
+
+
+        } catch (Exception e) {
+            System.out.println("Error occurred while updating arrival status.");
+            e.printStackTrace();
+        } finally {
+            disconnect();
+        }
+
+        return false;
+    }
+
+    public static void fetchReservationHistory() {
+        try {
+            System.out.println("Fetching reservation history.");
+            connect();
+
+            out.println("fetchReservationHistory " + User.getUserID());
+            System.out.println("Sent: fetchReservationHistory " + User.getUserID());
+
+            String response = in.readLine();
+            String command = response.split(" ", 2)[0];
+            String args = response.split(" ", 2).length > 1 ? response.split(" ", 2)[1] : "";
+            System.out.println("Received: " + command + " " + args);
+
+            if (command.equals("success")) {
+                for(int i = 0; i < args.split(",next").length; i++) {
+                    System.out.println("Reservation history " + (i + 1) + ": " + args.split(",next")[i]);
+                }
+                System.out.println("Reservation history fetched successfully.");
+            } else if (command.equals("failure")) {
+                System.out.println("Failed to fetch reservation history.");
+                System.out.println("Response: " + args);
+            } else {
+                System.out.println("Invalid response: " + response);
+            }
+
+        } catch (Exception e) {
+            System.out.println("Error occurred while fetching reservation history.");
+            e.printStackTrace();
+        } finally {
+            disconnect();
+        }
+    }
 }
