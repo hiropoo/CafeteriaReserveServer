@@ -964,8 +964,8 @@ class UpdateArrivedExecutor implements CommandExecutor {
 /*
 * 予約履歴取得処理
 * request -> "fetchReservationHistory userID"
-* response -> "success members cafeNum seatNum startTime endTime went, members cafeNum seatNum..." or "failure message"
-* （members は自分を含まない、一緒に予約した人）
+* response -> "success membersID:membersName,membersID:membersName... cafeNum seatNum startTime endTime went,next members cafeNum seatNum..." or "failure message"
+* （members は自分を含まない、一緒に予約した人、nextは予約の区切り）
 */
 class FetchReservationHistoryExecutor implements CommandExecutor{
     static final String EXPORT_RESERVATION_QUERY = "INSERT INTO reserv_history (user_id, members, cafe_num, seat_num, start_time, end_time, arrived) VALUES (?, ?, ?, ?, ? , ?, ?)";
