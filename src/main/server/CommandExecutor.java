@@ -186,9 +186,8 @@ class FetchFriendExecutor implements CommandExecutor {
                     friendList = friendList + ":" + friendName; // friendListに友達のユーザ名を追加
                 } while (resultSet.next());
                 GeneralMethods.outAndPrint(out, "success" + friendList, " fetched successfully");
-            } else {
-                GeneralMethods.outAndPrint(out, "failure",
-                        " An error occurred or this user has no reservations currently.");
+            }else {
+                GeneralMethods.outAndPrint(out, "failure noData", " An error occurred or this user has no reservations currently.");
             }
         } catch (SQLException e) {
             GeneralMethods.outAndPrint(out, "failure Failed to fetch friend.", "");
@@ -340,9 +339,8 @@ class FetchReservationExecutor implements CommandExecutor {
                     if (!FetchReservationHistoryExecutor.exportToHistory(resultSet, connection, out)) // 過去の予約なら履歴に移動させて終了
                         return; // 移動に失敗したらreturn
                     resultSet = statement.executeQuery();
-                    if (!resultSet.next()) { // 予約がもうない場合
-                        GeneralMethods.outAndPrint(out, "failure",
-                                " An error occurred or this user has no reservations currently.");
+                    if (!resultSet.next()){     //予約がもうない場合
+                        GeneralMethods.outAndPrint(out, "failure noData", " An error occurred or this user has no reservations currently.");
                         return;
                     }
                 }
@@ -379,9 +377,8 @@ class FetchReservationExecutor implements CommandExecutor {
                         + " " + localEndTime.format(formatter) + " " + resultSet.getBoolean("arrived");
 
                 GeneralMethods.outAndPrint(out, "success " + reservationInfo, " fetched successfully");
-            } else {
-                GeneralMethods.outAndPrint(out, "failure",
-                        " An error occurred or this user has no reservations currently.");
+            }else {
+                GeneralMethods.outAndPrint(out, "failure noData", " An error occurred or this user has no reservations currently.");
             }
         } catch (SQLException e) {
             GeneralMethods.outAndPrint(out, "failure Failed to fetch reservations.", "");
@@ -785,8 +782,7 @@ class FetchReservationHistoryExecutor implements CommandExecutor {
                 out.println("success" + reservHistory);
                 System.out.println("success '" + reservHistory + "' fetched successfully");
             } else {
-                GeneralMethods.outAndPrint(out, "failure An Error ocurred or this user has no reservations history.",
-                        "");
+                GeneralMethods.outAndPrint(out, "failure noData", " An Error ocurred or this user has no reservations history.");
             }
         } catch (SQLException e) {
             GeneralMethods.outAndPrint(out, "failure Failed to fetch reservations.", "");
