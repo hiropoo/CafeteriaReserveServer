@@ -15,11 +15,11 @@ public class Client {
         User.setStudentID(1234567890);
 
         // 予約情報の設定
-        Reservation.setStartTime(LocalDateTime.of(2024, 7, 11, 12, 00, 00));
-        Reservation.setEndTime(LocalDateTime.of(2024, 7, 11, 12, 20, 00));
+        Reservation.setStartTime(LocalDateTime.of(2024, 7, 15, 16, 20, 00));
+        Reservation.setEndTime(LocalDateTime.of(2024, 7, 15, 23, 20, 00));
         Reservation.setCafeNum(1);
         Reservation.setSeatNums(Arrays.asList(1, 2, 3));
-        Reservation.setMembers(Arrays.asList("user1", "user2", "user3"));
+        Reservation.setMembers(Arrays.asList("b3KV4-_wRRm3uCWx7pE7uw"));
         Reservation.setArrived(false);
     }
 
@@ -79,11 +79,11 @@ public class Client {
         // + Reservation.getEndTime().toString());
 
         /* 予約削除のテスト */
-        // ServerHandler.removeReservation();
-        // System.out.println("--- Reservation ---");
-        // System.out.println(Reservation.getStartTime() == null ? "Reservation does not exist" : "Reservation: " +
-        //         Reservation.getStartTime().toString() + " ~ "
-        //         + Reservation.getEndTime().toString());
+        ServerHandler.removeReservation();
+        System.out.println("--- Reservation ---");
+        System.out.println(Reservation.getStartTime() == null ? "Reservation does not exist" : "Reservation: " +
+                Reservation.getStartTime().toString() + " ~ "
+                + Reservation.getEndTime().toString());
 
         /* 空席情報取得のテスト */
         // List<Integer> availableSeats = ServerHandler.fetchAvailableSeats(1, LocalDateTime.of(2024, 7, 11, 12, 00, 00), 

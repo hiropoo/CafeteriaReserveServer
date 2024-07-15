@@ -285,7 +285,7 @@ class RemoveFriendExecutor implements CommandExecutor {
             int rowsAffected = statement.executeUpdate(); // このフレンド関係を削除する
 
             if (rowsAffected > 0) {
-                GeneralMethods.outAndPrint(out, "success", " Friend removed successfully.");
+                GeneralMethods.outAndPrint(out, "success ", " Friend removed successfully.");
             } else {
                 GeneralMethods.outAndPrint(out, "failure Failed to remove friend.", "");
             }
@@ -493,7 +493,7 @@ class AddReservationExecutor implements CommandExecutor {
                     return;
                 }
             }
-            GeneralMethods.outAndPrint(out, "success", " Added reservation successfully."); // 全メンバの予約を正常に保存できたらクライアントに通知
+            GeneralMethods.outAndPrint(out, "success ", " Added reservation successfully."); // 全メンバの予約を正常に保存できたらクライアントに通知
         } catch (SQLException e) {
             GeneralMethods.outAndPrint(out, "failure Failed to add reservation.", "");
             e.printStackTrace();
@@ -542,7 +542,7 @@ class RemoveReservationExecutor implements CommandExecutor {
                     GeneralMethods.outAndPrint(out, "failure Failed to remove reservations.", "");
                 }
             }
-            GeneralMethods.outAndPrint(out, "success", " Removed reservation successfully."); // すべて削除できたら通知
+            GeneralMethods.outAndPrint(out, "success ", " Removed reservation successfully."); // すべて削除できたら通知
         } catch (SQLException e) {
             GeneralMethods.outAndPrint(out, "failure Failed to remove reservations.", "");
             e.printStackTrace();
@@ -671,7 +671,7 @@ class UpdateArrivedExecutor implements CommandExecutor {
             int rowsUpdated = statement.executeUpdate();
 
             if (rowsUpdated > 0) {
-                GeneralMethods.outAndPrint(out, "success", " Updated 'arrived' successfully.");
+                GeneralMethods.outAndPrint(out, "success ", " Updated 'arrived' successfully.");
             } else {
                 GeneralMethods.outAndPrint(out, "failure Failed to update arrived.", "");
             }
