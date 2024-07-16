@@ -185,9 +185,10 @@ class FetchFriendExecutor implements CommandExecutor {
                     friendName = resultSet2.getString("username");
                     friendList = friendList + ":" + friendName; // friendListに友達のユーザ名を追加
                 } while (resultSet.next());
-                GeneralMethods.outAndPrint(out, "success" + friendList, " fetched successfully");
-            }else {
-                GeneralMethods.outAndPrint(out, "failure noData", " An error occurred or this user has no reservations currently.");
+                GeneralMethods.outAndPrint(out, "success " + friendList, " fetched successfully");
+            } else {
+                GeneralMethods.outAndPrint(out, "failure noData",
+                        " An error occurred or this user has no reservations currently.");
             }
         } catch (SQLException e) {
             GeneralMethods.outAndPrint(out, "failure Failed to fetch friend.", "");
@@ -255,7 +256,7 @@ class AddFriendExecutor implements CommandExecutor {
 /*
  * 友達削除処理
  * request -> "removeFriend userID friendID"
- * response -> "success" or "failure message"
+ * response -> "success " or "failure message"
  */
 class RemoveFriendExecutor implements CommandExecutor {
     static final String REMOVE_FRIEND_QUERY = "DELETE FROM friends WHERE (user_id1 = ? AND user_id2 = ?) OR (user_id1 = ? AND user_id2 = ?)";
@@ -285,7 +286,7 @@ class RemoveFriendExecutor implements CommandExecutor {
             int rowsAffected = statement.executeUpdate(); // このフレンド関係を削除する
 
             if (rowsAffected > 0) {
-                GeneralMethods.outAndPrint(out, "success", " Friend removed successfully.");
+                GeneralMethods.outAndPrint(out, "success ", " Friend removed successfully.");
             } else {
                 GeneralMethods.outAndPrint(out, "failure Failed to remove friend.", "");
             }
@@ -339,8 +340,9 @@ class FetchReservationExecutor implements CommandExecutor {
                     if (!FetchReservationHistoryExecutor.exportToHistory(resultSet, connection, out)) // 過去の予約なら履歴に移動させて終了
                         return; // 移動に失敗したらreturn
                     resultSet = statement.executeQuery();
-                    if (!resultSet.next()){     //予約がもうない場合
-                        GeneralMethods.outAndPrint(out, "failure noData", " An error occurred or this user has no reservations currently.");
+                    if (!resultSet.next()) { // 予約がもうない場合
+                        GeneralMethods.outAndPrint(out, "failure noData",
+                                " An error occurred or this user has no reservations currently.");
                         return;
                     }
                 }
@@ -377,8 +379,9 @@ class FetchReservationExecutor implements CommandExecutor {
                         + " " + localEndTime.format(formatter) + " " + resultSet.getBoolean("arrived");
 
                 GeneralMethods.outAndPrint(out, "success " + reservationInfo, " fetched successfully");
-            }else {
-                GeneralMethods.outAndPrint(out, "failure noData", " An error occurred or this user has no reservations currently.");
+            } else {
+                GeneralMethods.outAndPrint(out, "failure noData",
+                        " An error occurred or this user has no reservations currently.");
             }
         } catch (SQLException e) {
             GeneralMethods.outAndPrint(out, "failure Failed to fetch reservations.", "");
@@ -394,7 +397,7 @@ class FetchReservationExecutor implements CommandExecutor {
  * 予約追加処理
  * request ->
  * "addReservation userID1,userID2,... cafeNum seatNum startTime endTime"
- * response -> "success" or "failure message"
+ * response -> "success " or "failure message"
  * メンバーの誰かが既に予約をしている時 -> "failure userID:username seatNum"
  * 座席が空いていない時 -> "failure seatNum is not available"
  */
@@ -493,7 +496,7 @@ class AddReservationExecutor implements CommandExecutor {
                     return;
                 }
             }
-            GeneralMethods.outAndPrint(out, "success", " Added reservation successfully."); // 全メンバの予約を正常に保存できたらクライアントに通知
+            GeneralMethods.outAndPrint(out, "success ", " Added reservation successfully."); // 全メンバの予約を正常に保存できたらクライアントに通知
         } catch (SQLException e) {
             GeneralMethods.outAndPrint(out, "failure Failed to add reservation.", "");
             e.printStackTrace();
@@ -507,7 +510,7 @@ class AddReservationExecutor implements CommandExecutor {
 /*
  * 予約キャンセル処理
  * request -> "removeReservation userID1,userID2,..."
- * response -> "success" or "failure message"
+ * response -> "success " or "failure message"
  */
 class RemoveReservationExecutor implements CommandExecutor {
     String REMOVE_RESERVATION_QUERY = "DELETE FROM reservations WHERE user_id = ?";
@@ -542,7 +545,7 @@ class RemoveReservationExecutor implements CommandExecutor {
                     GeneralMethods.outAndPrint(out, "failure Failed to remove reservations.", "");
                 }
             }
-            GeneralMethods.outAndPrint(out, "success", " Removed reservation successfully."); // すべて削除できたら通知
+            GeneralMethods.outAndPrint(out, "success ", " Removed reservation successfully."); // すべて削除できたら通知
         } catch (SQLException e) {
             GeneralMethods.outAndPrint(out, "failure Failed to remove reservations.", "");
             e.printStackTrace();
@@ -623,7 +626,7 @@ class FetchAvailableSeatsExecutor implements CommandExecutor {
 /*
  * 位置情報から学食にきたかどうかを更新する処理
  * request -> "updateArrived userID cafeNum"
- * response -> "success" or "failure message"
+ * response -> "success " or "failure message"
  */
 class UpdateArrivedExecutor implements CommandExecutor {
     static final String SELECT_RESERVATION_ID_QUERY = "SELECT * FROM reservations WHERE user_id = ?";
@@ -642,15 +645,15 @@ class UpdateArrivedExecutor implements CommandExecutor {
         }
 
         Connection connection = null;
-        PreparedStatement statement = null;
+        PreparedStatement statement_1 = null, statement_2 = null;
         ResultSet resultSet = null;
         try {
             connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
             System.out.println("Connected to DB.");
 
-            statement = connection.prepareStatement(SELECT_RESERVATION_ID_QUERY);
-            statement.setString(1, userID);
-            resultSet = statement.executeQuery();
+            statement_1 = connection.prepareStatement(SELECT_RESERVATION_ID_QUERY);
+            statement_1.setString(1, userID);
+            resultSet = statement_1.executeQuery();
 
             if (resultSet.next()) {
                 LocalDateTime currentTime = LocalDateTime.now();
@@ -665,13 +668,19 @@ class UpdateArrivedExecutor implements CommandExecutor {
                 return;
             }
 
-            statement = connection.prepareStatement(UPDATE_ARRIVED_QUERY);
-            statement.setBoolean(1, true); // 指定されたユーザの予約のarrivedを更新
-            statement.setString(2, userID);
-            int rowsUpdated = statement.executeUpdate();
+            statement_2 = connection.prepareStatement(UPDATE_ARRIVED_QUERY);
+            statement_2.setBoolean(1, true); // 指定されたユーザの予約のarrivedを更新
+            statement_2.setString(2, userID);
+            int rowsUpdated = statement_2.executeUpdate();
+
+            resultSet = statement_1.executeQuery(); // 更新した後のデータを取得
+            resultSet.next();
+            if (!FetchReservationHistoryExecutor.exportToHistory(resultSet, connection, out)) { // 予約を履歴に移動
+                return;
+            }
 
             if (rowsUpdated > 0) {
-                GeneralMethods.outAndPrint(out, "success", " Updated 'arrived' successfully.");
+                GeneralMethods.outAndPrint(out, "success ", " Updated 'arrived' successfully.");
             } else {
                 GeneralMethods.outAndPrint(out, "failure Failed to update arrived.", "");
             }
@@ -679,7 +688,7 @@ class UpdateArrivedExecutor implements CommandExecutor {
             GeneralMethods.outAndPrint(out, "failure Failed to update arrived.", "");
             e.printStackTrace();
         } finally {
-            GeneralMethods.closeAll(connection, resultSet, null, null, null, statement);
+            GeneralMethods.closeAll(connection, resultSet, null, null, statement_1, statement_2);
             System.out.println();
         }
     }
@@ -779,10 +788,11 @@ class FetchReservationHistoryExecutor implements CommandExecutor {
                             + " " + localEndTime.format(formatter) + " " + historyResultSet.getBoolean("arrived");
                 } while (historyResultSet.next());
 
-                out.println("success" + reservHistory);
+                out.println("success " + reservHistory);
                 System.out.println("success '" + reservHistory + "' fetched successfully");
             } else {
-                GeneralMethods.outAndPrint(out, "failure noData", " An Error ocurred or this user has no reservations history.");
+                GeneralMethods.outAndPrint(out, "failure noData",
+                        " An Error ocurred or this user has no reservations history.");
             }
         } catch (SQLException e) {
             GeneralMethods.outAndPrint(out, "failure Failed to fetch reservations.", "");
