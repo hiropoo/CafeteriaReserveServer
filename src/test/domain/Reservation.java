@@ -1,4 +1,4 @@
-package test.util;
+package test.domain;
 
 import java.text.ParseException;
 import java.time.LocalDateTime;
