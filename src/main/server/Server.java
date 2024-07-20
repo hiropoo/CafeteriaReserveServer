@@ -48,8 +48,8 @@ public class Server {
             }
         };
         long initialDelay = calculateInitialDelay();
-        long period = 20;   //実行間隔
-        scheduler.scheduleAtFixedRate(task, initialDelay, period, TimeUnit.MINUTES); //定期的にtaskを実行
+        long period = 20; // 実行間隔
+        scheduler.scheduleAtFixedRate(task, initialDelay, period, TimeUnit.MINUTES); // 定期的にtaskを実行
 
         try {
             while (true) {
@@ -106,7 +106,7 @@ public class Server {
         }
     }
 
-    private static long calculateInitialDelay() {   //次の実行時間までの分数を返すメソッド
+    private static long calculateInitialDelay() { // 次の実行時間までの分数を返すメソッド
         LocalDateTime now = LocalDateTime.now();
         int minute = now.getMinute();
 
