@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.Map;
 
 import properties.PropertyUtil;
-import test.util.Reservation;
-import test.util.User;
+import test.domain.Reservation;
+import test.domain.User;
 
 /*
  * テスト用のサーバーハンドラ
@@ -325,7 +325,7 @@ public class ServerHandler {
 
     /*
      * ユーザーIDを送信し、予約情報を取得できたかどうかを返す
-     * 予約情報取得成功時には、予約情報をUserクラスに保存
+     * 予約情報取得成功時には、予約情報をUserクラスに保存cc
      * request -> "fetchReservation userID"
      * response ->
      * "success userID,userID,... cafeNum seatNum startTime endTime went"

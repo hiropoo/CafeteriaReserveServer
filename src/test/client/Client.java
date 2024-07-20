@@ -2,10 +2,9 @@ package test.client;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.List;
 
-import test.util.Reservation;
-import test.util.User;
+import test.domain.Reservation;
+import test.domain.User;
 
 public class Client {
     static {
@@ -15,11 +14,11 @@ public class Client {
         User.setStudentID(1234567890);
 
         // 予約情報の設定
-        Reservation.setStartTime(LocalDateTime.of(2024, 7, 11, 12, 00, 00));
-        Reservation.setEndTime(LocalDateTime.of(2024, 7, 11, 12, 20, 00));
+        Reservation.setStartTime(LocalDateTime.of(2024, 7, 19, 22, 40, 00));
+        Reservation.setEndTime(LocalDateTime.of(2024, 7, 19, 23, 00, 00));
         Reservation.setCafeNum(1);
-        Reservation.setSeatNums(Arrays.asList(1, 2, 3));
-        Reservation.setMembers(Arrays.asList("user1", "user2", "user3"));
+        Reservation.setSeatNums(Arrays.asList(1));
+        Reservation.setMembers(Arrays.asList("b3KV4-_wRRm3uCWx7pE7uw"));
         Reservation.setArrived(false);
     }
 
@@ -72,25 +71,27 @@ public class Client {
         // Reservation.getEndTime().toString());
 
         /* 予約追加のテスト */
-        // ServerHandler.addReservation();
-        // System.out.println("--- Reservation ---");
-        // System.out.println("Reservation: " +
-        // Reservation.getStartTime().toString() + " ~ "
-        // + Reservation.getEndTime().toString());
+        ServerHandler.addReservation();
+        System.out.println("--- Reservation ---");
+        System.out.println("Reservation: " +
+        Reservation.getStartTime().toString() + " ~ "
+        + Reservation.getEndTime().toString());
 
         /* 予約削除のテスト */
         // ServerHandler.removeReservation();
         // System.out.println("--- Reservation ---");
-        // System.out.println(Reservation.getStartTime() == null ? "Reservation does not exist" : "Reservation: " +
-        //         Reservation.getStartTime().toString() + " ~ "
-        //         + Reservation.getEndTime().toString());
+        // System.out.println(Reservation.getStartTime() == null ? "Reservation does not exist"
+        //         : "Reservation: " +
+        //                 Reservation.getStartTime().toString() + " ~ "
+        //                 + Reservation.getEndTime().toString());
 
         /* 空席情報取得のテスト */
-        // List<Integer> availableSeats = ServerHandler.fetchAvailableSeats(1, LocalDateTime.of(2024, 7, 11, 12, 00, 00), 
-        //         LocalDateTime.of(2024, 7, 11, 12, 00, 00));
+        // List<Integer> availableSeats = ServerHandler.fetchAvailableSeats(1,
+        // LocalDateTime.of(2024, 7, 11, 12, 00, 00),
+        // LocalDateTime.of(2024, 7, 11, 12, 00, 00));
         // System.out.println("--- Available Seats ---");
         // for (int seatNum : availableSeats) {
-        //     System.out.println("Seat Number: " + seatNum);
+        // System.out.println("Seat Number: " + seatNum);
         // }
         // System.out.println();
     }
