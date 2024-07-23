@@ -185,7 +185,7 @@ class FetchFriendExecutor implements CommandExecutor {
                     friendName = resultSet2.getString("username");
                     friendList = friendList + ":" + friendName; // friendListに友達のユーザ名を追加
                 } while (resultSet.next());
-                GeneralMethods.outAndPrint(out, "success " + friendList, " fetched successfully");
+                GeneralMethods.outAndPrint(out, "success" + friendList, " fetched successfully");
             } else {
                 GeneralMethods.outAndPrint(out, "failure noData",
                         " An error occurred or this user has no reservations currently.");
@@ -469,31 +469,33 @@ class AddReservationExecutor implements CommandExecutor {
                 }
             }
 
-            for (int i = 0; i < seatNums.size(); i++) { // 予約が重複しないように空席であることを確認
-                statement = connection.prepareStatement(CHECK_AVAILABLE_QUERY);
-                statement.setInt(1, cafeNum);
-                statement.setInt(2, seatNums.get(i));
-                resultSet = statement.executeQuery();
-                if (resultSet.next()) {
-                    GeneralMethods.outAndPrint(out, "failure seatNum: " + seatNums.get(i) + " is not available", "");
-                    return;
+            synchronized (this) {
+                for (int i = 0; i < seatNums.size(); i++) { // 予約が重複しないように空席であることを確認
+                    statement = connection.prepareStatement(CHECK_AVAILABLE_QUERY);
+                    statement.setInt(1, cafeNum);
+                    statement.setInt(2, seatNums.get(i));
+                    resultSet = statement.executeQuery();
+                    if (resultSet.next()) {
+                        GeneralMethods.outAndPrint(out, "failure seatNum: " + seatNums.get(i) + " is not available", "");
+                        return;
+                    }
                 }
-            }
 
-            for (int i = 0; i < membersNum; i++) { // メンバごとにreservationsテーブルに予約を保存
-                statement = connection.prepareStatement(ADD_RESERVATION_QUERY);
-                statement.setString(1, userIDs.get(i));
-                statement.setString(2, reservationID);
-                statement.setInt(3, cafeNum);
-                statement.setInt(4, seatNums.get(i));
-                statement.setTimestamp(5, Timestamp.valueOf(startTime));
-                statement.setTimestamp(6, Timestamp.valueOf(endTime));
-                statement.setBoolean(7, arrived);
-                int rowsAffected = statement.executeUpdate();
+                for (int i = 0; i < membersNum; i++) { // メンバごとにreservationsテーブルに予約を保存
+                    statement = connection.prepareStatement(ADD_RESERVATION_QUERY);
+                    statement.setString(1, userIDs.get(i));
+                    statement.setString(2, reservationID);
+                    statement.setInt(3, cafeNum);
+                    statement.setInt(4, seatNums.get(i));
+                    statement.setTimestamp(5, Timestamp.valueOf(startTime));
+                    statement.setTimestamp(6, Timestamp.valueOf(endTime));
+                    statement.setBoolean(7, arrived);
+                    int rowsAffected = statement.executeUpdate();
 
-                if (rowsAffected <= 0) {
-                    GeneralMethods.outAndPrint(out, "failure Failed to add reservation.", "");
-                    return;
+                    if (rowsAffected <= 0) {
+                        GeneralMethods.outAndPrint(out, "failure Failed to add reservation.", "");
+                        return;
+                    }
                 }
             }
             GeneralMethods.outAndPrint(out, "success ", " Added reservation successfully."); // 全メンバの予約を正常に保存できたらクライアントに通知
